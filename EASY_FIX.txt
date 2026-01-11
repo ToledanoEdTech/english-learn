@@ -1,0 +1,28 @@
+הדרך הכי פשוטה להעלות לגיטהב:
+
+1. לחץ על הקובץ SIMPLE_UPLOAD.bat
+
+2. זה יפתח את גיטהב בדפדפן
+
+3. בגיטהב:
+   - לחץ "Add file" (כפתור ירוק)
+   - בחר "Upload files"
+   - גרור את הקבצים:
+     * App.tsx
+     * constants.ts
+     * game/GameEngine.ts
+     * package.json
+     * vercel.json
+     * vite.config.ts
+     * manifest.json
+     * index.html
+     * public/bosses/ (רק אם הוספת/החלפת תמונות של בוסים)
+
+4. כתוב הודעה: "שדרוג משחק"
+
+5. לחץ "Commit changes"
+
+זהו! 🎉
+
+אחרי 5 דקות Vercel יעדכן אוטומטית.
+
