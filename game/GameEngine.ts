@@ -1959,6 +1959,9 @@ export class GameEngine {
   }
 
   updateProjectiles(dt: number) {
+      // ספירת קרניים פעילות להרחבת הקרן
+      const activeBeamCount = this.projectilePool.filter(pr => pr.active && pr.type === 'beam').length;
+      
       this.projectilePool.forEach(p => {
           if (!p.active) return;
           if (p.type === 'beam') { 
@@ -1972,11 +1975,13 @@ export class GameEngine {
           
           if (this.boss && p.active && !p.hasHit) {
               const isMobile = this.width < 600;
-              const hitRadius = isMobile ? 100 : 140;
+              const baseHitRadius = isMobile ? 100 : 140;
+              // הרחבת רדיוס הפגיעה בהתאם למספר הקרניים הפעילות
+              const hitRadius = p.type === 'beam' ? baseHitRadius * (1 + activeBeamCount * 0.3) : baseHitRadius;
               let isHit = p.type === 'beam' ? (Math.abs(p.x - this.boss.x) < hitRadius && this.boss.y < p.y) : (Math.hypot(p.x - this.boss.x, p.y - this.boss.y) < (p.type === 'fire' ? hitRadius * 1.2 : hitRadius));
               if (isHit) { 
                   const bossY = this.boss.y; // שמירת המיקום לפני שהבוס עשוי להיעלם
-                  this.damageBoss(p); 
+                  this.damageBoss(p, activeBeamCount); 
                   p.hasHit = true;
                   if (p.type === 'beam') {
                       p.targetY = bossY + 100;
@@ -1990,9 +1995,11 @@ export class GameEngine {
       });
   }
 
-  damageBoss(p: any) {
+  damageBoss(p: any, activeBeamCount: number = 1) {
       if (!this.boss) return;
-      let dmg = p.type === 'missile' ? 12 : p.type === 'beam' ? 6 : p.type === 'fire' ? 15 : p.type === 'electric' ? 8 : p.type === 'laser' ? 7 : 4;
+      let baseDmg = p.type === 'missile' ? 12 : p.type === 'beam' ? 6 : p.type === 'fire' ? 15 : p.type === 'electric' ? 8 : p.type === 'laser' ? 7 : 4;
+      // הנזק לבוס תלוי במספר הקרניים הפעילות (ככל שיש יותר קרניים, הנזק גדול יותר)
+      let dmg = p.type === 'beam' ? baseDmg * activeBeamCount : baseDmg;
       this.boss.hp -= dmg;
       Sound.play('boss_hit');
       if (this.gameFrame % 4 === 0) this.spawnExplosion(p.x, this.boss.y + 50, p.type === 'fire' ? '#f97316' : '#fbbf24', 1);
@@ -3581,32 +3588,36 @@ export class GameEngine {
       const isMobile = this.width < 600;
       this.ctx.save();
       if(p.type === 'beam') {
+          // ספירת קרניים פעילות להרחבת הקרן
+          const activeBeamCount = this.projectilePool.filter(pr => pr.active && pr.type === 'beam').length;
           const scale = isMobile ? 0.5 : 1.0;
+          // הרחבת הקרן בהתאם למספר הקרניים הפעילות
+          const beamWidthMultiplier = 1 + (activeBeamCount - 1) * 0.3;
           const endY = p.targetY;
 
           // Outer neon-blue glow (tight and intense)
-          this.ctx.shadowBlur = 30 * scale; this.ctx.shadowColor = '#00ffff';
-          this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)'; this.ctx.lineWidth = 12 * scale;
+          this.ctx.shadowBlur = 30 * scale * beamWidthMultiplier; this.ctx.shadowColor = '#00ffff';
+          this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)'; this.ctx.lineWidth = 12 * scale * beamWidthMultiplier;
           this.ctx.beginPath(); this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p.x, endY); this.ctx.stroke();
 
           // Middle energy layer (brighter blue)
-          this.ctx.shadowBlur = 20 * scale; this.ctx.shadowColor = '#60efff';
-          this.ctx.strokeStyle = 'rgba(96, 239, 255, 0.9)'; this.ctx.lineWidth = 6 * scale;
+          this.ctx.shadowBlur = 20 * scale * beamWidthMultiplier; this.ctx.shadowColor = '#60efff';
+          this.ctx.strokeStyle = 'rgba(96, 239, 255, 0.9)'; this.ctx.lineWidth = 6 * scale * beamWidthMultiplier;
           this.ctx.beginPath(); this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p.x, endY); this.ctx.stroke();
 
           // White-hot center core (thicker and more concentrated)
-          this.ctx.shadowBlur = 12 * scale; this.ctx.shadowColor = '#ffffff';
-          this.ctx.strokeStyle = '#ffffff'; this.ctx.lineWidth = 3 * scale;
+          this.ctx.shadowBlur = 12 * scale * beamWidthMultiplier; this.ctx.shadowColor = '#ffffff';
+          this.ctx.strokeStyle = '#ffffff'; this.ctx.lineWidth = 3 * scale * beamWidthMultiplier;
           this.ctx.beginPath(); this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p.x, endY); this.ctx.stroke();
 
           // Impact point with concentrated energy
-          const impactG = this.ctx.createRadialGradient(p.x, endY, 0, p.x, endY, 12 * scale);
+          const impactG = this.ctx.createRadialGradient(p.x, endY, 0, p.x, endY, 12 * scale * beamWidthMultiplier);
           impactG.addColorStop(0, '#ffffff');
           impactG.addColorStop(0.5, '#60efff');
           impactG.addColorStop(1, 'transparent');
           this.ctx.fillStyle = impactG;
-          this.ctx.shadowBlur = 20 * scale; this.ctx.shadowColor = '#00ffff';
-          this.ctx.beginPath(); this.ctx.arc(p.x, endY, 12 * scale, 0, Math.PI*2); this.ctx.fill();
+          this.ctx.shadowBlur = 20 * scale * beamWidthMultiplier; this.ctx.shadowColor = '#00ffff';
+          this.ctx.beginPath(); this.ctx.arc(p.x, endY, 12 * scale * beamWidthMultiplier, 0, Math.PI*2); this.ctx.fill();
 
           this.ctx.shadowBlur = 0;
       } else if (p.type === 'fire') {

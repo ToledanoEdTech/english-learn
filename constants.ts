@@ -1,7 +1,7 @@
 
 import { Word, ShopItem, Achievement, Sugia } from './types';
 
-export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyVRPErIu7-rm-3goBKB_KMy_0GPONmfQhVrPu9gdZI5dVjO7tdiX2dALkHaDZk3M2r/exec';
+export const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2j8DTeve82fE_a_4j1_Py3SZj02JlrroBWzONc_Mtk1X7VVIbUHpKpdtvWgjqS15l4w/exec';
 
 export const ACHIEVEMENTS: Achievement[] = [
   { id: 'zurba', title: 'מאסטר קומבו', desc: 'רצף (Combo) של 10 פגיעות נכונות ברצף', icon: '🎯' },
