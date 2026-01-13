@@ -8,8 +8,9 @@ export const Sound = {
   // Initialize as null to prevent immediate errors on import
   menuTrack: null as HTMLAudioElement | null,
   gameTrack: null as HTMLAudioElement | null,
+  introTrack: null as HTMLAudioElement | null,
   
-  currentMode: 'menu' as 'menu' | 'game',
+  currentMode: 'menu' as 'menu' | 'game' | 'intro',
   musicEnabled: true, // Flag to disable music if files are missing
 
   init: function() {
@@ -56,6 +57,20 @@ export const Sound = {
             this.musicEnabled = false;
         }
     }
+
+    // אתחול מוזיקת אינטרו
+    if (!this.introTrack) {
+        try {
+            this.introTrack = new Audio('./intro.mp3');
+            this.introTrack.loop = false; // אינטרו לא חוזר על עצמו
+            this.introTrack.volume = 0.5;
+            this.introTrack.addEventListener('error', (e) => {
+                console.warn("Intro music file not found or unsupported. Intro will play without music.");
+            });
+        } catch (e) {
+            console.warn("Failed to create intro audio element", e);
+        }
+    }
   },
 
   // פונקציה לניגון מוזיקת תפריט
@@ -88,10 +103,14 @@ export const Sound = {
     this.currentMode = 'game';
     if (this.isMuted || !this.musicEnabled || !this.gameTrack) return;
 
-    // עצירת מוזיקת תפריט אם היא מנגנת
+    // עצירת כל המוזיקה האחרת (תפריט ואינטרו)
     if (this.menuTrack) {
         this.menuTrack.pause();
         this.menuTrack.currentTime = 0;
+    }
+    if (this.introTrack) {
+        this.introTrack.pause();
+        this.introTrack.currentTime = 0;
     }
 
     // ניסיון לנגן משחק
@@ -107,6 +126,34 @@ export const Sound = {
     }
   },
 
+  // פונקציה לניגון מוזיקת אינטרו
+  playIntroMusic: function() {
+    this.currentMode = 'intro';
+    if (this.isMuted || !this.musicEnabled || !this.introTrack) return;
+
+    // עצירת כל המוזיקה האחרת
+    if (this.menuTrack) {
+        this.menuTrack.pause();
+        this.menuTrack.currentTime = 0;
+    }
+    if (this.gameTrack) {
+        this.gameTrack.pause();
+        this.gameTrack.currentTime = 0;
+    }
+
+    // ניסיון לנגן אינטרו
+    const playPromise = this.introTrack.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(error => {
+        if (error.name === 'NotSupportedError' || error.message.includes('supported sources')) {
+             console.warn("Intro music autoplay blocked");
+        } else {
+             console.log("Intro music waiting for interaction");
+        }
+      });
+    }
+  },
+
   // פונקציה כללית לעצירת כל המוזיקה
   stopMusic: function() {
     if (this.menuTrack) {
@@ -116,6 +163,10 @@ export const Sound = {
     if (this.gameTrack) {
         this.gameTrack.pause();
         this.gameTrack.currentTime = 0;
+    }
+    if (this.introTrack) {
+        this.introTrack.pause();
+        this.introTrack.currentTime = 0;
     }
   },
 
@@ -131,6 +182,8 @@ export const Sound = {
         this.menuTrack.play().catch(() => {});
       } else if (this.currentMode === 'game' && this.gameTrack && this.gameTrack.paused) {
         this.gameTrack.play().catch(() => {});
+      } else if (this.currentMode === 'intro' && this.introTrack && this.introTrack.paused) {
+        this.introTrack.play().catch(() => {});
       }
     }
   },
@@ -141,6 +194,7 @@ export const Sound = {
       this.stopMusic();
     } else {
       if (this.currentMode === 'menu') this.playMenuMusic();
+      else if (this.currentMode === 'intro') this.playIntroMusic();
       else this.playGameMusic();
     }
     return this.isMuted;

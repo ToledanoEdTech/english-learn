@@ -4,6 +4,7 @@ import { GameState, GameStats, LeaderboardEntry, ShopItem, Achievement, Sugia, W
 import { SHOP_ITEMS, SCRIPT_URL, ACHIEVEMENTS, SUGIOT, DICTIONARY } from './constants';
 import { Sound } from './utils/sound';
 import { GameEngine, GameConfig } from './game/GameEngine';
+import { IntroSlides } from './IntroSlides';
 
 const safeParse = (key: string, fallback: any) => {
   try {
@@ -72,6 +73,12 @@ function App() {
   const [customWordList, setCustomWordList] = useState<Word[] | null>(null);
   const [dynamicWords, setDynamicWords] = useState<Word[]>([]);
   const [hasFetched, setHasFetched] = useState(false);
+  const [showIntro, setShowIntro] = useState(false);
+  const [pendingSugia, setPendingSugia] = useState<Sugia | undefined>(undefined);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingStatus, setLoadingStatus] = useState('טוען משחק...');
+  const [isMuted, setIsMuted] = useState(false);
   
   // Teacher Mode State
   const [teacherSelectedIndices, setTeacherSelectedIndices] = useState<number[]>([]);
@@ -164,17 +171,115 @@ function App() {
     }
   }, []);
 
-  // Initial fetch
+  // טעינת כל הנכסים של המשחק
+  const loadAllAssets = useCallback(async () => {
+    const assets: string[] = [];
+    
+    // תמונות אינטרו
+    for (let i = 1; i <= 5; i++) {
+      assets.push(`/intro/slide${i}.png`);
+    }
+    
+    // תמונות ספינות
+    const shipImages = [
+      '/ships/default.png',
+      '/ships/gold.png',
+      '/ships/butzina.png',
+      '/ships/torah.png',
+      '/ships/choshen.png',
+      '/ships/skin_default.png',
+      '/ships/skin_gold.png',
+      '/ships/skin_butzina.png',
+      '/ships/skin_torah.png',
+      '/ships/skin_choshen.png',
+      '/ships/bomb.png',
+      '/ships/shield.png',
+      '/ships/freeze.png'
+    ];
+    assets.push(...shipImages);
+    
+    // תמונות בוסים
+    const bossImages = [
+      '/bosses/agirat.png',
+      '/bosses/ashmedai.png',
+      '/bosses/koy.png',
+      '/bosses/leviathan.png',
+      '/bosses/shed.png',
+      '/bosses/tannina.png'
+    ];
+    assets.push(...bossImages);
+    
+    // לוגו
+    assets.push('/logo.png');
+    
+    let loadedCount = 0;
+    const totalAssets = assets.length;
+    
+    const loadAsset = (src: string): Promise<void> => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          loadedCount++;
+          setLoadingProgress(Math.round((loadedCount / totalAssets) * 100));
+          resolve();
+        };
+        img.onerror = () => {
+          loadedCount++;
+          setLoadingProgress(Math.round((loadedCount / totalAssets) * 100));
+          resolve(); // המשך גם אם תמונה נכשלה
+        };
+        img.src = src;
+      });
+    };
+    
+    // טעינת תמונות
+    setLoadingStatus('טוען תמונות...');
+    await Promise.all(assets.map(loadAsset));
+    
+    // טעינת מוזיקה ברקע
+    setLoadingStatus('טוען מוזיקה...');
+    const musicFiles = ['./menu.mp3', './game.mp3', './intro.mp3'];
+    musicFiles.forEach(src => {
+      const audio = new Audio(src);
+      audio.load();
+    });
+    
+    // השהיה קצרה כדי שהמוזיקה תתחיל להיטען
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    setLoadingStatus('מסיים טעינה...');
+    setLoadingProgress(100);
+    
+    // השהיה קצרה לפני הצגת התפריט
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    setIsLoadingAssets(false);
+  }, []);
+
+  // Initial fetch and asset loading
   useEffect(() => {
-    fetchData();
-    Sound.init();
     const checkMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     setIsMobile(checkMobile);
     
-    // התחלת מוזיקת תפריט בטעינה ראשונית
-    if (gameState === 'MENU') {
-      Sound.playMenuMusic();
-    }
+    // טעינת נכסים ואז נתונים
+    loadAllAssets().then(() => {
+      Sound.init();
+      fetchData();
+      
+      // בדיקת מצב השתקה מ-localStorage
+      const savedMuteState = localStorage.getItem('muted');
+      if (savedMuteState === 'true' && !Sound.isMuted) {
+        Sound.toggleMute();
+        setIsMuted(true);
+      } else {
+        setIsMuted(Sound.isMuted);
+      }
+      
+      // התחלת מוזיקת תפריט בטעינה ראשונית
+      if (gameState === 'MENU') {
+        Sound.playMenuMusic();
+      }
+    });
 
     // הוספת האזנה לכל אינטראקציה כדי לשחרר את חסימת האודיו של הדפדפן
     const unlockAudio = () => {
@@ -182,7 +287,7 @@ function App() {
       Sound.resume();
       
       // הסרת המאזינים רק אם הצלחנו לנגן
-      if (!Sound.menuTrack.paused || !Sound.gameTrack.paused || (Sound.ctx && Sound.ctx.state === 'running')) {
+      if ((Sound.menuTrack && !Sound.menuTrack.paused) || (Sound.gameTrack && !Sound.gameTrack.paused) || (Sound.ctx && Sound.ctx.state === 'running')) {
         window.removeEventListener('click', unlockAudio);
         window.removeEventListener('touchstart', unlockAudio);
         window.removeEventListener('keydown', unlockAudio);
@@ -198,7 +303,7 @@ function App() {
       window.removeEventListener('touchstart', unlockAudio);
       window.removeEventListener('keydown', unlockAudio);
     };
-  }, [fetchData]);
+  }, [loadAllAssets, fetchData]);
 
   // Handle URL Parameter after data is fetched
   useEffect(() => {
@@ -281,15 +386,38 @@ function App() {
 
   const gameLoop = useCallback((time: number) => {
     if (engineRef.current) {
-        const deltaTime = lastTimeRef.current ? (time - lastTimeRef.current) / (1000 / 60) : 1;
+        let deltaTime = lastTimeRef.current ? (time - lastTimeRef.current) / (1000 / 60) : 1;
         lastTimeRef.current = time;
+        
+        // אופטימיזציה למובייל: האטה ב-40% (המהירות תהיה 60% מהמהירות המקורית)
+        if (isMobile) {
+          deltaTime *= 0.6;
+        }
+        
         engineRef.current.update(Math.min(deltaTime, 2.0)); 
         engineRef.current.draw();
         animationFrameId.current = requestAnimationFrame(gameLoop);
     }
-  }, []);
+  }, [isMobile]);
 
-  const startGame = (sugia?: Sugia) => {
+  // פונקציה להתחלת משחק עם אינטרו (אם צריך)
+  const startGameWithIntro = (sugia?: Sugia, skipIntro: boolean = false) => {
+    // אם לא דילגו במפורש, הצג אינטרו
+    if (!skipIntro) {
+      // הצגת אינטרו
+      setPendingSugia(sugia);
+      setShowIntro(true);
+      setGameState('INTRO');
+      return;
+    }
+    
+    // דילוג על אינטרו - התחלת משחק ישירות
+    // עצירת מוזיקת אינטרו לפני התחלת המשחק
+    Sound.stopMusic();
+    startGame(sugia, true);
+  };
+
+  const startGame = (sugia?: Sugia, skipIntro: boolean = false) => {
     if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current);
     engineRef.current = null;
     lastTimeRef.current = 0;
@@ -308,7 +436,10 @@ function App() {
     
     Sound.resume();
     Sound.play('ui_click');
-    Sound.playGameMusic(); // שימוש בפונקציה החדשה
+    // עצירת כל המוזיקה לפני התחלת מוזיקת המשחק
+    Sound.stopMusic();
+    // התחלת מוזיקת המשחק (הפונקציה עצמה עוצרת את מוזיקת האינטרו, אבל אנחנו כבר עצרנו אותה)
+    Sound.playGameMusic();
     setGameState('PLAYING');
     setIsPaused(false);
     
@@ -617,10 +748,58 @@ const equipSkin = (id: string) => {
       dir="rtl"
       style={{ touchAction: gameState === 'PLAYING' ? 'none' : 'auto' }}
     >
+      {/* מסך טעינה ראשוני */}
+      {isLoadingAssets && (
+        <div className="fixed inset-0 z-[300] bg-slate-950 flex flex-col items-center justify-center">
+          <div className="text-center">
+            <h1 className="font-aramaic text-5xl md:text-8xl rk-neon-title mb-8 animate-pulse">
+              טוען משחק
+            </h1>
+            <div className="w-64 md:w-96 h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700/60 mb-4">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-500 via-amber-400 to-blue-500 transition-all duration-300 animate-pulse"
+                style={{ width: `${loadingProgress}%` }}
+              />
+            </div>
+            <div className="text-slate-300 text-lg md:text-2xl font-bold mb-2">
+              {loadingProgress}%
+            </div>
+            <div className="text-slate-400 text-sm md:text-lg">
+              {loadingStatus}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Intro Slides */}
+      {gameState === 'INTRO' && (
+        <IntroSlides
+          onComplete={() => {
+            setShowIntro(false);
+            setGameState('MENU'); // איפוס מצב לפני התחלת משחק
+            Sound.stopMusic(); // עצירה מפורשת של מוזיקת אינטרו
+            // השהיה קצרה לפני התחלת המשחק כדי לוודא שהאינטרו נסגר והמוזיקה נעצרה
+            setTimeout(() => {
+              const sugiaToStart = pendingSugia;
+              setPendingSugia(undefined);
+              startGame(sugiaToStart, true);
+            }, 200);
+          }}
+          onSkip={() => {
+            setShowIntro(false);
+            Sound.stopMusic(); // עצירה מפורשת של מוזיקת אינטרו
+            // התחלה ישירה של המשחק ללא מעבר דרך MENU
+            const sugiaToStart = pendingSugia;
+            setPendingSugia(undefined);
+            startGame(sugiaToStart, true);
+          }}
+        />
+      )}
+
       <canvas ref={canvasRef} className="block w-full h-full" />
 
       {/* Animated menu/backdrop (CSS) */}
-      {gameState !== 'PLAYING' && (
+      {gameState !== 'PLAYING' && gameState !== 'INTRO' && (
         <Backdrop mode={gameState === 'MENU' ? 'menu' : 'default'} showShips={gameState === 'MENU'} />
       )}
       
@@ -785,9 +964,24 @@ const equipSkin = (id: string) => {
           </div>
       )}
 
-      {gameState === 'MENU' && (
+      {gameState === 'MENU' && !isLoadingAssets && (
           <div className="absolute inset-0 flex items-center justify-center h-full">
               <div className="relative z-20 flex flex-col items-center p-4 md:p-8 w-[min(92vw,40rem)] text-center overflow-y-auto max-h-[92vh] scrollbar-hide rk-glass-strong rk-glow rounded-[2rem] md:rounded-[2.5rem]">
+                  <div className="flex justify-end w-full mb-2">
+                      <button 
+                          onClick={() => { 
+                              const muted = Sound.toggleMute(); 
+                              setIsMuted(muted);
+                              localStorage.setItem('muted', muted.toString());
+                              Sound.play('ui_click');
+                          }} 
+                          className="rk-btn rk-btn-muted px-3 py-2 md:px-4 md:py-3 text-xl md:text-2xl flex items-center justify-center"
+                          aria-label={isMuted ? 'השתק' : 'הפעל קול'}
+                          title={isMuted ? 'השתק' : 'הפעל קול'}
+                      >
+                          {isMuted ? '🔇' : '🔊'}
+                      </button>
+                  </div>
                   <h1 className="font-aramaic text-5xl md:text-9xl rk-neon-title mb-1 md:mb-4 animate-bounce-slow tracking-tight">
                       אלוף האנגלית
                   </h1>
@@ -870,9 +1064,13 @@ const equipSkin = (id: string) => {
                   <div className="mt-4 flex flex-col items-center justify-center opacity-80 hover:opacity-100 transition-opacity pb-8">
                       <span className="text-amber-400/80 text-[10px] md:text-xs font-bold tracking-widest mb-1">נוצר ע"י יוסף טולידנו</span>
                       <img
-                          src="https://drive.google.com/thumbnail?id=1Tu5_e7jgTsQHCr0yV_8d-9CbWwOwL7UM&sz=w1000"
-                          alt="Yosef Toledano Logo"
+                          src="/logo.png"
+                          alt="Game Logo"
                           className="h-12 md:h-16 w-auto object-contain drop-shadow-lg"
+                          onError={(e) => {
+                            // Fallback אם הלוגו לא קיים
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
                       />
                   </div>
               </div>
@@ -1127,24 +1325,34 @@ const equipSkin = (id: string) => {
                           <h3 className="text-lg md:text-5xl font-black rk-neon-title mb-0 font-aramaic">{selectedSugia.title}</h3>
                           <p className="text-xs md:text-xl text-slate-200/75 italic max-w-2xl line-clamp-2 md:line-clamp-none">{selectedSugia.description}</p>
                       </div>
-                      <button onClick={() => startGame(selectedSugia)} className="rk-btn rk-btn-primary w-full md:w-auto text-lg md:text-4xl px-6 md:px-20 py-3 md:py-6">התחל ביחידה</button>
+                      <button onClick={() => startGameWithIntro(selectedSugia)} className="rk-btn rk-btn-primary w-full md:w-auto text-lg md:text-4xl px-6 md:px-20 py-3 md:py-6">התחל ביחידה</button>
                   </div>
               )}
           </div>
       )}
 
       {gameState === 'SHOP' && (
-          <div className="absolute inset-0 bg-transparent flex flex-col items-center p-4 md:p-8 z-20 overflow-y-auto scrollbar-hide h-full text-white">
-              <div className="w-full max-w-6xl">
-                <div className="rk-glass-strong rounded-3xl px-4 py-4 md:px-8 md:py-6 mb-6 md:mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
-                  <div className="text-center md:text-right">
-                    <h2 className="text-3xl md:text-7xl font-aramaic rk-neon-title leading-none">חנות הציוד</h2>
-                    <div className="rk-hud-label mt-2">שדרוגים, סקינים ופריטים מתכלים</div>
+          <div className="absolute inset-0 bg-transparent flex flex-col items-center z-20 h-full text-white">
+              {/* חלק עליון קבוע (sticky) */}
+              <div className="w-full max-w-6xl sticky top-0 z-30 bg-slate-950/95 backdrop-blur-md border-b border-slate-800/50 pb-4 pt-4 md:pt-8">
+                <div className="rk-glass-strong rounded-3xl px-4 py-4 md:px-8 md:py-6 mb-4 md:mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                  <div className="flex items-center justify-between w-full md:w-auto gap-4">
+                    <div className="text-center md:text-right">
+                      <h2 className="text-3xl md:text-7xl font-aramaic rk-neon-title leading-none">חנות הציוד</h2>
+                      <div className="rk-hud-label mt-2">שדרוגים, סקינים ופריטים מתכלים</div>
+                    </div>
+                    <button onClick={handleReturnToMenu} className="rk-btn rk-btn-muted px-4 py-2 md:px-6 md:py-3 text-sm md:text-lg font-bold whitespace-nowrap">
+                      חזור
+                    </button>
                   </div>
                   <div className="rk-glass rounded-full border border-slate-700/60 px-6 py-2 md:px-8 md:py-3 shadow-inner flex items-center gap-3">
                     <span className="text-xl md:text-4xl font-black text-white">{coins.toLocaleString()}</span> <GoldCoin size={24} />
                   </div>
                 </div>
+              </div>
+              
+              {/* תוכן החנות עם גלילה */}
+              <div className="w-full max-w-6xl flex-1 overflow-y-auto scrollbar-hide p-4 md:p-8 pt-0 md:pt-0">
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-10">
                     {SHOP_ITEMS.map(item => {
@@ -1193,15 +1401,18 @@ const equipSkin = (id: string) => {
                                 <div className="rk-item-frame-inner">
                                   {(() => {
                                     if (item.type === 'skin') {
+                                      // שימוש בסקינים מתיקיית ships (ללא prefix skin_)
+                                      const skinImageMap: Record<string, string> = {
+                                        'skin_default': '/ships/default.png',
+                                        'skin_gold': '/ships/gold.png',
+                                        'skin_torah': '/ships/torah.png',
+                                        'skin_butzina': '/ships/butzina.png',
+                                        'skin_choshen': '/ships/choshen.png'
+                                      };
+                                      
                                       return (
                                         <img
-                                          src={
-                                            item.id === 'skin_default' ? '/ships/default.png' :
-                                            item.id === 'skin_gold' ? '/ships/gold.png' :
-                                            item.id === 'skin_torah' ? '/ships/torah.png' :
-                                            item.id === 'skin_butzina' ? '/ships/butzina.png' :
-                                            item.id === 'skin_choshen' ? '/ships/choshen.png' : undefined
-                                          }
+                                          src={skinImageMap[item.id] || '/ships/default.png'}
                                           alt={item.name}
                                           draggable={false}
                                           className="w-32 h-32 md:w-56 md:h-56 object-contain drop-shadow-2xl"
@@ -1245,10 +1456,6 @@ const equipSkin = (id: string) => {
                         );
                     })}
                 </div>
-
-                <button onClick={handleReturnToMenu} className="rk-btn rk-btn-muted mx-auto block mb-10 md:mb-12 text-lg md:text-2xl">
-                  חזור
-                </button>
               </div>
           </div>
       )}
@@ -1350,7 +1557,7 @@ const equipSkin = (id: string) => {
                   </div>
               </div>
               <div className="flex gap-2 md:gap-4 w-full max-w-md pb-12 md:pb-0">
-                  <button onClick={() => startGame(selectedSugia || undefined)} className="rk-btn rk-btn-primary flex-1 text-sm md:text-xl">שוב</button>
+                  <button onClick={() => startGameWithIntro(selectedSugia || undefined, true)} className="rk-btn rk-btn-primary flex-1 text-sm md:text-xl">שוב</button>
                   <button onClick={() => { if (animationFrameId.current) cancelAnimationFrame(animationFrameId.current); engineRef.current = null; Sound.play('ui_click'); setGameState('MAP'); }} className="rk-btn rk-btn-muted flex-1 text-sm md:text-xl">מפה</button>
                   <button onClick={handleReturnToMenu} className="rk-btn rk-btn-muted flex-1 text-sm md:text-xl">תפריט</button>
               </div>
@@ -1476,7 +1683,7 @@ const Backdrop = ({ mode, showShips }: { mode: BackdropMode; showShips: boolean 
 
   const ships = useMemo(() => {
     if (!showShips) return [];
-    const sources = ['/ships/skin_default.png', '/ships/skin_gold.png', '/ships/skin_butzina.png'];
+    const sources = ['/ships/default.png', '/ships/gold.png', '/ships/butzina.png'];
     return Array.from({ length: 10 }).map((_, i) => {
       const dur = 14 + Math.random() * 12;
       const w = 56 + Math.random() * 62;

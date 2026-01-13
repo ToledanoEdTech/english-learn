@@ -1629,9 +1629,11 @@ export class GameEngine {
 
     // Image-based (replace these files to change ships in-game)
     const imageCandidates: Record<string, string[]> = {
-      skin_default: ['ships/skin_default.png', 'ships/default.png'],
-      skin_gold: ['ships/skin_gold.png', 'ships/gold.png'],
-      skin_butzina: ['ships/skin_butzina.png', 'ships/butzina.png']
+      skin_default: ['ships/default.png', 'ships/skin_default.png'],
+      skin_gold: ['ships/gold.png', 'ships/skin_gold.png'],
+      skin_butzina: ['ships/butzina.png', 'ships/skin_butzina.png'],
+      skin_torah: ['ships/torah.png', 'ships/skin_torah.png'],
+      skin_choshen: ['ships/choshen.png', 'ships/skin_choshen.png']
     };
 
     Object.entries(imageCandidates).forEach(([skin, candidates]) => {
@@ -2250,41 +2252,280 @@ export class GameEngine {
 
   drawBackgroundTheme() {
     const loc = this.config.location || 'nehardea';
-    const subPhase = this.level % 7;
+    const time = this.gameFrame * 0.01;
+    const isMobile = this.width < 600;
+    const particleCount = isMobile ? 8 : 15;
+    
+    this.ctx.save();
+    
     if (loc === 'nehardea') {
-        const blueVal = 138 + (subPhase * 15);
-        const grad = this.ctx.createLinearGradient(0, this.height - 200, 0, this.height);
-        grad.addColorStop(0, 'rgba(30, 58, 138, 0)'); grad.addColorStop(1, `rgba(30, 58, ${blueVal}, 0.5)`);
-        this.ctx.fillStyle = grad; this.ctx.fillRect(0, this.height - 200, this.width, 200);
+        // רקע חלל כחול עם נבולות כחולות ופלנטות רחוקות
+        const nebulaIntensity = 0.3 + Math.sin(time * 0.5) * 0.1;
+        
+        // נבולה כחולה - שכבת רקע
+        const nebulaGrad1 = this.ctx.createRadialGradient(
+            this.width * 0.3, this.height * 0.4, 0,
+            this.width * 0.3, this.height * 0.4, this.width * 0.8
+        );
+        nebulaGrad1.addColorStop(0, `rgba(59, 130, 246, ${nebulaIntensity * 0.4})`);
+        nebulaGrad1.addColorStop(0.6, `rgba(30, 58, 138, ${nebulaIntensity * 0.25})`);
+        nebulaGrad1.addColorStop(1, 'rgba(15, 23, 42, 0)');
+        this.ctx.fillStyle = nebulaGrad1;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        
+        // נבולה כחולה שנייה - שכבת קדמה
+        const nebulaGrad2 = this.ctx.createRadialGradient(
+            this.width * 0.7 + Math.sin(time * 0.3) * 50, this.height * 0.6, 0,
+            this.width * 0.7, this.height * 0.6, this.width * 0.6
+        );
+        nebulaGrad2.addColorStop(0, `rgba(96, 165, 250, ${nebulaIntensity * 0.3})`);
+        nebulaGrad2.addColorStop(0.5, `rgba(59, 130, 246, ${nebulaIntensity * 0.2})`);
+        nebulaGrad2.addColorStop(1, 'rgba(30, 58, 138, 0)');
+        this.ctx.fillStyle = nebulaGrad2;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        
+        // פלנטות רחוקות - נקודות אור
+        this.ctx.globalAlpha = 0.4 + Math.sin(time * 0.7) * 0.2;
+        this.ctx.fillStyle = 'rgba(147, 197, 253, 0.6)';
+        for(let i = 0; i < particleCount; i++) {
+            const seed = i * 137.508; // Golden angle
+            const x = (this.width * 0.2 + seed * 37) % this.width;
+            const y = (this.height * 0.3 + seed * 47) % this.height;
+            const size = 2 + (seed % 3);
+            const pulse = 1 + Math.sin(time * 2 + seed) * 0.3;
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, size * pulse, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        
     } else if (loc === 'sura') {
-        const pillarAlpha = 0.15 + (subPhase * 0.04);
-        this.ctx.fillStyle = `rgba(239, 68, 68, ${pillarAlpha})`;
-        for(let i=0; i<4; i++) {
-            const x = (i * this.width / 3 + this.gameFrame * 0.5) % (this.width + 100) - 50;
-            this.ctx.fillRect(x, 0, 3, this.height);
+        // רקע חלל אדום עם כוכבים אדומים וענני אנרגיה
+        const energyIntensity = 0.35 + Math.sin(time * 0.6) * 0.1;
+        
+        // ענן אנרגיה אדום - שכבת רקע
+        const energyGrad1 = this.ctx.createRadialGradient(
+            this.width * 0.5, this.height * 0.3, 0,
+            this.width * 0.5, this.height * 0.3, this.width * 1.2
+        );
+        energyGrad1.addColorStop(0, `rgba(239, 68, 68, ${energyIntensity * 0.5})`);
+        energyGrad1.addColorStop(0.4, `rgba(220, 38, 38, ${energyIntensity * 0.35})`);
+        energyGrad1.addColorStop(0.7, `rgba(185, 28, 28, ${energyIntensity * 0.2})`);
+        energyGrad1.addColorStop(1, 'rgba(127, 29, 29, 0)');
+        this.ctx.fillStyle = energyGrad1;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        
+        // ענן אנרגיה שני - שכבת קדמה
+        const energyGrad2 = this.ctx.createRadialGradient(
+            this.width * 0.2 + Math.cos(time * 0.4) * 80, this.height * 0.7, 0,
+            this.width * 0.2, this.height * 0.7, this.width * 0.7
+        );
+        energyGrad2.addColorStop(0, `rgba(248, 113, 113, ${energyIntensity * 0.4})`);
+        energyGrad2.addColorStop(0.5, `rgba(239, 68, 68, ${energyIntensity * 0.25})`);
+        energyGrad2.addColorStop(1, 'rgba(220, 38, 38, 0)');
+        this.ctx.fillStyle = energyGrad2;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        
+        // חלקיקי אנרגיה אדומים
+        this.ctx.globalAlpha = 0.5 + Math.sin(time * 0.8) * 0.3;
+        this.ctx.fillStyle = 'rgba(248, 113, 113, 0.7)';
+        for(let i = 0; i < particleCount; i++) {
+            const seed = i * 137.508;
+            const x = (this.width * 0.15 + seed * 41 + time * 20) % this.width;
+            const y = (this.height * 0.25 + seed * 53) % this.height;
+            const size = 1.5 + (seed % 2.5);
+            const pulse = 1 + Math.sin(time * 3 + seed) * 0.4;
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, size * pulse, 0, Math.PI * 2);
+            this.ctx.fill();
         }
+        
     } else if (loc === 'pumbedita') {
-        const scrollAlpha = 0.15 + (subPhase * 0.03);
-        this.ctx.fillStyle = `rgba(251, 191, 36, ${scrollAlpha})`;
-        this.ctx.font = 'bold 30px serif';
-        for(let i=0; i<6; i++) {
-            const x = (i * 300 + this.gameFrame * 0.4) % (this.width + 200) - 100;
-            const y = 100 + (i * 150) % (this.height - 200);
-            this.ctx.fillText("📜", x, y);
+        // רקע חלל זהוב עם זוהר זהוב ופלנטות זהב
+        const goldIntensity = 0.4 + Math.sin(time * 0.5) * 0.15;
+        
+        // זוהר זהוב - שכבת רקע
+        const goldGrad1 = this.ctx.createRadialGradient(
+            this.width * 0.6, this.height * 0.5, 0,
+            this.width * 0.6, this.height * 0.5, this.width * 1.0
+        );
+        goldGrad1.addColorStop(0, `rgba(251, 191, 36, ${goldIntensity * 0.5})`);
+        goldGrad1.addColorStop(0.3, `rgba(245, 158, 11, ${goldIntensity * 0.4})`);
+        goldGrad1.addColorStop(0.6, `rgba(217, 119, 6, ${goldIntensity * 0.25})`);
+        goldGrad1.addColorStop(1, 'rgba(180, 83, 9, 0)');
+        this.ctx.fillStyle = goldGrad1;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        
+        // זוהר זהוב שני - שכבת קדמה
+        const goldGrad2 = this.ctx.createRadialGradient(
+            this.width * 0.3 + Math.sin(time * 0.35) * 60, this.height * 0.4, 0,
+            this.width * 0.3, this.height * 0.4, this.width * 0.65
+        );
+        goldGrad2.addColorStop(0, `rgba(253, 224, 71, ${goldIntensity * 0.45})`);
+        goldGrad2.addColorStop(0.5, `rgba(251, 191, 36, ${goldIntensity * 0.3})`);
+        goldGrad2.addColorStop(1, 'rgba(245, 158, 11, 0)');
+        this.ctx.fillStyle = goldGrad2;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        
+        // פלנטות זהב - נקודות אור
+        this.ctx.globalAlpha = 0.5 + Math.sin(time * 0.6) * 0.25;
+        this.ctx.fillStyle = 'rgba(253, 224, 71, 0.8)';
+        for(let i = 0; i < particleCount; i++) {
+            const seed = i * 137.508;
+            const x = (this.width * 0.1 + seed * 43) % this.width;
+            const y = (this.height * 0.2 + seed * 51) % this.height;
+            const size = 2 + (seed % 3.5);
+            const pulse = 1 + Math.sin(time * 2.5 + seed) * 0.35;
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, size * pulse, 0, Math.PI * 2);
+            this.ctx.fill();
         }
+        
+    } else if (loc === 'mahoza') {
+        // רקע חלל סגול עם גלקסיות ומערבולות
+        const vortexIntensity = 0.35 + Math.sin(time * 0.55) * 0.12;
+        
+        // גלקסיה סגולה - שכבת רקע
+        const vortexGrad1 = this.ctx.createRadialGradient(
+            this.width * 0.4, this.height * 0.45, 0,
+            this.width * 0.4, this.height * 0.45, this.width * 1.1
+        );
+        vortexGrad1.addColorStop(0, `rgba(168, 85, 247, ${vortexIntensity * 0.5})`);
+        vortexGrad1.addColorStop(0.3, `rgba(147, 51, 234, ${vortexIntensity * 0.4})`);
+        vortexGrad1.addColorStop(0.6, `rgba(126, 34, 206, ${vortexIntensity * 0.25})`);
+        vortexGrad1.addColorStop(1, 'rgba(88, 28, 135, 0)');
+        this.ctx.fillStyle = vortexGrad1;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        
+        // מערבולת סגולה שנייה
+        const vortexGrad2 = this.ctx.createRadialGradient(
+            this.width * 0.75 + Math.cos(time * 0.4) * 70, this.height * 0.6, 0,
+            this.width * 0.75, this.height * 0.6, this.width * 0.75
+        );
+        vortexGrad2.addColorStop(0, `rgba(192, 132, 252, ${vortexIntensity * 0.4})`);
+        vortexGrad2.addColorStop(0.5, `rgba(168, 85, 247, ${vortexIntensity * 0.28})`);
+        vortexGrad2.addColorStop(1, 'rgba(147, 51, 234, 0)');
+        this.ctx.fillStyle = vortexGrad2;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        
+        // חלקיקי מערבולת
+        this.ctx.globalAlpha = 0.45 + Math.sin(time * 0.7) * 0.25;
+        this.ctx.fillStyle = 'rgba(192, 132, 252, 0.75)';
+        for(let i = 0; i < particleCount; i++) {
+            const seed = i * 137.508;
+            const angle = time * 0.2 + seed * 0.1;
+            const radius = 80 + (seed % 120);
+            const x = this.width * 0.5 + Math.cos(angle) * radius + Math.sin(time * 0.3) * 40;
+            const y = this.height * 0.5 + Math.sin(angle) * radius + Math.cos(time * 0.3) * 40;
+            const size = 1.5 + (seed % 3);
+            const pulse = 1 + Math.sin(time * 2.8 + seed) * 0.3;
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, size * pulse, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        
+    } else if (loc === 'matamehasia') {
+        // רקע חלל כהה עם ערפיליות כחולות-סגולות
+        const nebulaIntensity = 0.25 + Math.sin(time * 0.45) * 0.1;
+        
+        // ערפילית כחולה-סגולה - שכבת רקע
+        const deepGrad1 = this.ctx.createRadialGradient(
+            this.width * 0.5, this.height * 0.4, 0,
+            this.width * 0.5, this.height * 0.4, this.width * 1.3
+        );
+        deepGrad1.addColorStop(0, `rgba(79, 70, 229, ${nebulaIntensity * 0.4})`);
+        deepGrad1.addColorStop(0.4, `rgba(67, 56, 202, ${nebulaIntensity * 0.3})`);
+        deepGrad1.addColorStop(0.7, `rgba(55, 48, 163, ${nebulaIntensity * 0.18})`);
+        deepGrad1.addColorStop(1, 'rgba(30, 27, 75, 0)');
+        this.ctx.fillStyle = deepGrad1;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        
+        // ערפילית שנייה - שכבת קדמה
+        const deepGrad2 = this.ctx.createRadialGradient(
+            this.width * 0.25 + Math.sin(time * 0.3) * 50, this.height * 0.65, 0,
+            this.width * 0.25, this.height * 0.65, this.width * 0.8
+        );
+        deepGrad2.addColorStop(0, `rgba(99, 102, 241, ${nebulaIntensity * 0.35})`);
+        deepGrad2.addColorStop(0.5, `rgba(79, 70, 229, ${nebulaIntensity * 0.22})`);
+        deepGrad2.addColorStop(1, 'rgba(67, 56, 202, 0)');
+        this.ctx.fillStyle = deepGrad2;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        
+        // כוכבים רחוקים - נקודות אור קטנות
+        this.ctx.globalAlpha = 0.3 + Math.sin(time * 0.5) * 0.2;
+        this.ctx.fillStyle = 'rgba(129, 140, 248, 0.6)';
+        for(let i = 0; i < particleCount * 1.5; i++) {
+            const seed = i * 137.508;
+            const x = (this.width * 0.05 + seed * 39) % this.width;
+            const y = (this.height * 0.1 + seed * 49) % this.height;
+            const size = 1 + (seed % 2);
+            const pulse = 1 + Math.sin(time * 1.8 + seed) * 0.4;
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, size * pulse, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        
+    } else if (loc === 'beiradelvat') {
+        // רקע חלל עם סופות אנרגיה ופלזמה רב-צבעונית
+        const stormIntensity = 0.4 + Math.sin(time * 0.65) * 0.15;
+        
+        // סופת אנרגיה כחולה-אדומה - שכבת רקע
+        const stormGrad1 = this.ctx.createRadialGradient(
+            this.width * 0.5 + Math.sin(time * 0.3) * 100, this.height * 0.5, 0,
+            this.width * 0.5, this.height * 0.5, this.width * 1.4
+        );
+        stormGrad1.addColorStop(0, `rgba(59, 130, 246, ${stormIntensity * 0.45})`);
+        stormGrad1.addColorStop(0.3, `rgba(239, 68, 68, ${stormIntensity * 0.4})`);
+        stormGrad1.addColorStop(0.6, `rgba(168, 85, 247, ${stormIntensity * 0.3})`);
+        stormGrad1.addColorStop(1, 'rgba(30, 27, 75, 0)');
+        this.ctx.fillStyle = stormGrad1;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        
+        // סופת אנרגיה שנייה
+        const stormGrad2 = this.ctx.createRadialGradient(
+            this.width * 0.3 + Math.cos(time * 0.4) * 90, this.height * 0.35, 0,
+            this.width * 0.3, this.height * 0.35, this.width * 0.9
+        );
+        stormGrad2.addColorStop(0, `rgba(251, 191, 36, ${stormIntensity * 0.4})`);
+        stormGrad2.addColorStop(0.4, `rgba(239, 68, 68, ${stormIntensity * 0.3})`);
+        stormGrad2.addColorStop(0.7, `rgba(168, 85, 247, ${stormIntensity * 0.2})`);
+        stormGrad2.addColorStop(1, 'rgba(59, 130, 246, 0)');
+        this.ctx.fillStyle = stormGrad2;
+        this.ctx.fillRect(0, 0, this.width, this.height);
+        
+        // חלקיקי פלזמה רב-צבעוניים
+        const colors = [
+            'rgba(59, 130, 246, 0.8)',   // כחול
+            'rgba(239, 68, 68, 0.8)',    // אדום
+            'rgba(168, 85, 247, 0.8)',   // סגול
+            'rgba(251, 191, 36, 0.8)'    // זהב
+        ];
+        this.ctx.globalAlpha = 0.5 + Math.sin(time * 0.8) * 0.3;
+        for(let i = 0; i < particleCount; i++) {
+            const seed = i * 137.508;
+            const x = (this.width * 0.1 + seed * 45 + time * 25) % this.width;
+            const y = (this.height * 0.15 + seed * 55 + Math.sin(time * 0.5 + seed) * 30) % this.height;
+            const size = 2 + (seed % 4);
+            const pulse = 1 + Math.sin(time * 3.2 + seed) * 0.4;
+            const colorIndex = Math.floor(seed) % colors.length;
+            this.ctx.fillStyle = colors[colorIndex];
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, size * pulse, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        
     } else {
-        this.ctx.save();
-        this.ctx.globalAlpha = 0.08;
-        this.ctx.fillStyle = '#fff';
-        this.ctx.font = 'bold 45px Frank Ruhl Libre';
-        const letters = ["א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט", "י"];
-        for(let i=0; i<10; i++) {
-          const x = (i * 180 + this.gameFrame * 0.2) % this.width;
-          const y = (i * 140 + this.gameFrame * 0.15) % this.height;
-          this.ctx.fillText(letters[i % letters.length], x, y);
-        }
-        this.ctx.restore();
+        // fallback - רקע חלל כחול בסיסי
+        const baseGrad = this.ctx.createRadialGradient(
+            this.width * 0.5, this.height * 0.5, 0,
+            this.width * 0.5, this.height * 0.5, this.width * 0.8
+        );
+        baseGrad.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+        baseGrad.addColorStop(1, 'rgba(30, 58, 138, 0)');
+        this.ctx.fillStyle = baseGrad;
+        this.ctx.fillRect(0, 0, this.width, this.height);
     }
+    
+    this.ctx.restore();
   }
 
   drawEntities() {
@@ -2459,8 +2700,8 @@ export class GameEngine {
       const effectiveScale =
           skin === 'skin_gold' ? scale * 1.22 :
           skin === 'skin_butzina' ? scale * 1.1 :
-          skin === 'skin_torah' ? scale * 1.06 :
-          skin === 'skin_choshen' ? scale * 1.04 :
+          skin === 'skin_torah' ? scale * 1.35 : // הגדלת מטוס תורה
+          skin === 'skin_choshen' ? scale * 1.35 : // הגדלת מטוס חושן
           scale;
 
       this.ctx.scale(effectiveScale, effectiveScale);
@@ -2532,9 +2773,10 @@ export class GameEngine {
       }
 
       // Choshen special: short golden chains fluttering behind (drawn behind the ship)
-      if (skin === 'skin_choshen') {
-          this.drawChoshenChains(w, h);
-      }
+      // הסרת שרשרות זהב מצדדיו - לפי בקשה
+      // if (skin === 'skin_choshen') {
+      //     this.drawChoshenChains(w, h);
+      // }
 
       // Simple shadow (no blur) for depth
       this.ctx.save();
@@ -2775,6 +3017,13 @@ export class GameEngine {
       const baseScale = isMobile ? mobileScale : 1.18;
       const scale = isDesktop ? baseScale * 1.25 : baseScale;
 
+      // בדיקה אם התמונה נטענה - אם לא, לא מציירים כלום (מונע מטוס ישן)
+      const textureStatus = this.shipTextureStatus[skin];
+      if (textureStatus === 'loading' || textureStatus === 'idle') {
+          // עדיין טוען - לא מציירים כלום
+          return;
+      }
+
       const enhanced = this.shipEnhancedTextures[skin];
       if (enhanced) {
           this.renderShipWithTexture(enhanced, skin, scale);
@@ -2788,7 +3037,7 @@ export class GameEngine {
 
       const butzinaScale = skin === 'skin_butzina' ? scale * 1.4 : scale; // Make Butzina Kadisha bigger 
       if (skin === 'skin_choshen') {
-          this.ctx.save(); this.ctx.scale(scale, scale);
+          this.ctx.save(); this.ctx.scale(scale * 1.35, scale * 1.35); // הגדלת מטוס חושן
           const w = 55, h = 70;
 
           // Enhanced golden frame with better glow
@@ -2826,7 +3075,7 @@ export class GameEngine {
           this.ctx.restore(); return;
       }
       if (skin === 'skin_torah') {
-          this.ctx.save(); this.ctx.scale(scale, scale);
+          this.ctx.save(); this.ctx.scale(scale * 1.35, scale * 1.35); // הגדלת מטוס תורה
           const pulse = Math.sin(this.gameFrame * 0.1) * 4;
 
           // Golden Torah handles (Etz Chaim) with enhanced detail
@@ -3362,19 +3611,19 @@ export class GameEngine {
           this.ctx.shadowBlur = 0;
       } else if (p.type === 'fire') {
           this.ctx.translate(p.x, p.y); 
+          // גודל רגיל ללא אפקטים מסביב
           const baseSize = isMobile ? 18 : 35;
-          const pulseRange = isMobile ? 6 : 12;
-          const rPulse = baseSize + Math.sin(this.gameFrame * 0.4) * pulseRange;
+          const rPulse = baseSize;
           
           const fG = this.ctx.createRadialGradient(0,0,5,0,0,rPulse); fG.addColorStop(0, '#fff'); fG.addColorStop(0.3, '#fde68a'); fG.addColorStop(0.6, '#f97316'); fG.addColorStop(1, 'transparent');
-          this.ctx.fillStyle = fG; this.ctx.shadowBlur = 30; this.ctx.shadowColor = '#f97316';
+          this.ctx.fillStyle = fG; this.ctx.shadowBlur = 0; // הסרת אפקטים מסביב
           this.ctx.beginPath(); this.ctx.arc(0, 0, rPulse, 0, Math.PI*2); this.ctx.fill();
       } else if (p.type === 'electric') {
-          // Enhanced electric bolt with multiple branching streams
+          // קשת חשמל רגילה ללא שרשרות מצדדיו
           const segments = 12;
           const branchChance = 0.3;
 
-          // Main lightning bolt
+          // Main lightning bolt - גודל רגיל
           this.ctx.strokeStyle = '#60efff'; this.ctx.lineWidth = 4; this.ctx.shadowBlur = 25; this.ctx.shadowColor = '#60efff';
           this.ctx.lineCap = 'round'; this.ctx.lineJoin = 'round';
           this.ctx.beginPath();
@@ -3404,7 +3653,7 @@ export class GameEngine {
           }
           this.ctx.stroke();
 
-          // Inner bright core
+          // Inner bright core - גודל רגיל
           this.ctx.strokeStyle = '#ffffff'; this.ctx.lineWidth = 2; this.ctx.shadowBlur = 15; this.ctx.shadowColor = '#ffffff';
           this.ctx.beginPath();
           curX = p.x; curY = p.y; this.ctx.moveTo(curX, curY);

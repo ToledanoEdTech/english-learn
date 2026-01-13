@@ -589,13 +589,127 @@
 .scrollbar-hide { scrollbar-width: none; -ms-overflow-style: none; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 
+/* ------------------------------
+   Enhanced Progress Bar
+--------------------------------*/
+.rk-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(2, 6, 23, 0.6);
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.rk-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, 
+    rgba(59, 130, 246, 0.9) 0%,
+    rgba(251, 191, 36, 0.9) 50%,
+    rgba(59, 130, 246, 0.9) 100%
+  );
+  background-size: 200% 100%;
+  animation: rk-progress-shimmer 2s linear infinite;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  transition: width 0.3s ease-out;
+}
+
+@keyframes rk-progress-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ------------------------------
+   Enhanced Neon Effects
+--------------------------------*/
+.rk-neon-pulse {
+  animation: rk-neon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes rk-neon-pulse {
+  0%, 100% {
+    text-shadow:
+      0 0 10px rgba(251, 191, 36, 0.85),
+      0 0 22px rgba(251, 191, 36, 0.45),
+      0 0 28px rgba(59, 130, 246, 0.35);
+  }
+  50% {
+    text-shadow:
+      0 0 20px rgba(251, 191, 36, 1),
+      0 0 35px rgba(251, 191, 36, 0.65),
+      0 0 45px rgba(59, 130, 246, 0.55),
+      0 0 60px rgba(88, 28, 135, 0.40);
+  }
+}
+
+.rk-glow-pulse {
+  animation: rk-glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes rk-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3), 0 0 40px rgba(88, 28, 135, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(88, 28, 135, 0.4), 0 0 80px rgba(251, 191, 36, 0.2);
+  }
+}
+
+/* ------------------------------
+   Smooth Transitions
+--------------------------------*/
+.rk-smooth-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rk-smooth-transition-fast {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ------------------------------
+   Loading Spinner
+--------------------------------*/
+.rk-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(59, 130, 246, 0.2);
+  border-top-color: rgba(59, 130, 246, 0.9);
+  border-radius: 50%;
+  animation: rk-spin 1s linear infinite;
+}
+
+@keyframes rk-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ------------------------------
+   Glassmorphism Enhancements
+--------------------------------*/
+.rk-glass-hover {
+  transition: all 0.3s ease;
+}
+
+.rk-glass-hover:hover {
+  background: rgba(2, 6, 23, 0.65);
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 
+    0 18px 60px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(59, 130, 246, 0.25),
+    0 0 40px rgba(59, 130, 246, 0.20);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rk-backdrop::before,
   .rk-glyph,
   .rk-bg-ship,
   .animate-fade-in,
   .animate-slide-up,
-  .animate-bounce-slow {
+  .animate-bounce-slow,
+  .rk-neon-pulse,
+  .rk-glow-pulse,
+  .rk-progress-fill,
+  .rk-spinner {
     animation: none !important;
     transition: none !important;
   }
