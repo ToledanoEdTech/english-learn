@@ -81,6 +81,7 @@ export class GameEngine {
   height: number;
   activeDictionary: Word[] = [];
   currentDeck: Word[] = [];
+  currentWordObj: Word | null = null;
   
   player: { x: number; y: number; width: number; height: number; isHit: boolean; velocityX: number; bankAngle: number };
   
@@ -144,12 +145,13 @@ export class GameEngine {
   onFeedback: (msg: string, isGood: boolean) => void;
   onAchievement: (id: string) => void;
   onUnitComplete: (stats: any) => void;
+  onWrongAnswer?: (word: string, meaning: string) => void;
 
   constructor(
     canvas: HTMLCanvasElement, 
     config: GameConfig,
     inventory: { bombs: number, shields: number, potions: number },
-    callbacks: { onStatsUpdate: any, onGameOver: any, onFeedback: any, onAchievement: any, onUnitComplete: any }
+    callbacks: { onStatsUpdate: any, onGameOver: any, onFeedback: any, onAchievement: any, onUnitComplete: any, onWrongAnswer?: any }
   ) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
@@ -166,6 +168,7 @@ export class GameEngine {
     this.onFeedback = callbacks.onFeedback;
     this.onAchievement = callbacks.onAchievement;
     this.onUnitComplete = callbacks.onUnitComplete;
+    this.onWrongAnswer = callbacks.onWrongAnswer;
 
     this.applySkinWeapon();
 
@@ -1849,6 +1852,7 @@ export class GameEngine {
     this.config.location = currentSugia.location;
 
     let wordObj = this.getUniqueWord();
+    this.currentWordObj = wordObj;
     this.onStatsUpdate({ 
       currentWord: wordObj.aramaic, 
       level: this.level, 
@@ -2218,11 +2222,17 @@ export class GameEngine {
           this.onStatsUpdate({ hasShield: this.shieldStrength > 0 });
           setTimeout(() => this.startRound(), 1000);
       } else {
-          this.lives--; this.combo = 0; this.triggerShake(20); Sound.play('hit'); this.onFeedback("נפגעת!", false);
+          this.lives--; this.combo = 0; this.triggerShake(20); Sound.play('hit');
           this.spawnExplosion(this.player.x, this.player.y, '#ef4444', 40);
           this.onStatsUpdate({ lives: this.lives, combo: 0 });
+          
+          // הצגת הפירוש הנכון כשטועים
+          if (this.currentWordObj && this.onWrongAnswer) {
+              this.onWrongAnswer(this.currentWordObj.aramaic, this.currentWordObj.hebrew);
+          }
+          
           if (this.lives <= 0) { this.playerExploding = true; this.explosionTimer = 90; this.onStatsUpdate({ bossActive: false, bossHpPercent: 0 }); Sound.play('explosion'); }
-          else { setTimeout(() => this.startRound(), 1200); }
+          else { setTimeout(() => this.startRound(), 2000); } // שינוי מ-1200 ל-2000 כדי לתת זמן להצגת הפירוש
       }
   }
 

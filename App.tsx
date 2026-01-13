@@ -114,6 +114,7 @@ function App() {
   });
 
   const [feedback, setFeedback] = useState<{msg: string, isGood: boolean} | null>(null);
+  const [wrongAnswerInfo, setWrongAnswerInfo] = useState<{word: string, meaning: string} | null>(null);
   const [config, setConfig] = useState<GameConfig>({
       difficulty: 'medium',
       category: 'common',
@@ -500,6 +501,12 @@ function App() {
                         setTransitionStats(s);
                         setIsUnitComplete(true);
                         Sound.play('powerup');
+                    },
+                    onWrongAnswer: (word: string, meaning: string) => {
+                        setWrongAnswerInfo({ word, meaning });
+                        setTimeout(() => {
+                            setWrongAnswerInfo(null);
+                        }, 2000);
                     }
                 }
             );
@@ -964,6 +971,22 @@ const equipSkin = (id: string) => {
           </div>
       )}
 
+      {wrongAnswerInfo && (
+          <div className="absolute inset-0 flex items-center justify-center z-[160] pointer-events-none">
+              <div className="rk-glass-strong rk-glow border border-red-400/30 p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] text-center max-w-lg w-[90%] animate-fade-in shadow-2xl">
+                  <div className="text-red-400 text-lg md:text-2xl font-bold mb-3 md:mb-4 uppercase tracking-widest">
+                      טעות! הפירוש הנכון:
+                  </div>
+                  <div className="font-aramaic text-3xl md:text-5xl text-white mb-3 md:mb-4 drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]" dir="auto">
+                      {wrongAnswerInfo.word}
+                  </div>
+                  <div className="text-amber-300 text-xl md:text-3xl font-black border-t border-amber-400/20 pt-3 md:pt-4">
+                      {wrongAnswerInfo.meaning}
+                  </div>
+              </div>
+          </div>
+      )}
+
       {gameState === 'MENU' && !isLoadingAssets && (
           <div className="absolute inset-0 flex items-center justify-center h-full">
               <div className="relative z-20 flex flex-col items-center p-4 md:p-8 w-[min(92vw,40rem)] text-center overflow-y-auto max-h-[92vh] scrollbar-hide rk-glass-strong rk-glow rounded-[2rem] md:rounded-[2.5rem]">
@@ -982,8 +1005,8 @@ const equipSkin = (id: string) => {
                           {isMuted ? '🔇' : '🔊'}
                       </button>
                   </div>
-                  <h1 className="font-aramaic text-5xl md:text-9xl rk-neon-title mb-1 md:mb-4 animate-bounce-slow tracking-tight">
-                      אלוף האנגלית
+                  <h1 className="font-aramaic text-5xl md:text-9xl rk-neon-title mb-1 md:mb-4 animate-bounce-slow tracking-tight whitespace-nowrap">
+                      Word Wars
                   </h1>
                   <p className="rk-neon-subtitle mb-4 md:mb-8 text-[11px] md:text-2xl font-light tracking-[0.28em] border-b border-blue-500/20 pb-2 uppercase">
                     לימוד מילים באנגלית - גרסת הקרב
@@ -1683,7 +1706,8 @@ const Backdrop = ({ mode, showShips }: { mode: BackdropMode; showShips: boolean 
 
   const ships = useMemo(() => {
     if (!showShips) return [];
-    const sources = ['/ships/default.png', '/ships/gold.png', '/ships/butzina.png'];
+    // רק המטוסים עצמם, לא תמונות החנות (skin_*)
+    const sources = ['/ships/default.png', '/ships/gold.png', '/ships/butzina.png', '/ships/torah.png', '/ships/choshen.png'];
     return Array.from({ length: 10 }).map((_, i) => {
       const dur = 14 + Math.random() * 12;
       const w = 56 + Math.random() * 62;
