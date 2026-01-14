@@ -168,7 +168,7 @@ export const IntroSlides: React.FC<IntroSlidesProps> = ({ onComplete, onSkip }) 
       <img
         src={currentSlideData.image}
         alt=""
-        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+        className="absolute inset-0 w-full h-full object-contain md:object-cover transition-opacity duration-500"
         style={{
           opacity: fadeState === 'in' ? 1 : 0
         }}

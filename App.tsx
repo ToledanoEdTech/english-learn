@@ -390,9 +390,9 @@ function App() {
         let deltaTime = lastTimeRef.current ? (time - lastTimeRef.current) / (1000 / 60) : 1;
         lastTimeRef.current = time;
         
-        // אופטימיזציה למובייל: האטה ב-40% (המהירות תהיה 60% מהמהירות המקורית)
+        // אופטימיזציה למובייל: האטה קלה (המהירות תהיה 65% מהמהירות המקורית)
         if (isMobile) {
-          deltaTime *= 0.6;
+          deltaTime *= 0.65;
         }
         
         engineRef.current.update(Math.min(deltaTime, 2.0)); 
@@ -1324,7 +1324,7 @@ const equipSkin = (id: string) => {
                                       className={`w-20 h-24 md:w-36 md:h-48 rounded-2xl border flex flex-col items-center justify-center text-xl md:text-4xl font-aramaic transition-all cursor-pointer relative
                                           ${isUnlocked ? (isSelected ? 'rk-glass-strong border-amber-400/40 scale-110 -translate-y-2 md:-translate-y-4 ring-4 ring-amber-400/15' : 'rk-glass border-blue-400/20 hover:border-amber-400/25 hover:scale-105') : 'rk-glass border-slate-700/30 grayscale opacity-40 cursor-not-allowed'}`}>
                                       <div className="rk-hud-label absolute top-2 right-2">יחידה {idx+1}</div>
-                                      <div className={`mb-1 md:mb-2 flex items-center justify-center ${isUnlocked ? 'rk-neon-title' : 'text-slate-400'}`}>
+                                      <div className={`flex items-center justify-center flex-1 ${isUnlocked ? 'rk-neon-title' : 'text-slate-400'}`}>
                                         {isUnlocked ? (
                                           <span className="font-black text-2xl md:text-5xl leading-none">
                                             {String.fromCharCode(65 + (idx % 26))}
@@ -1377,7 +1377,7 @@ const equipSkin = (id: string) => {
               {/* תוכן החנות עם גלילה */}
               <div className="w-full max-w-6xl flex-1 overflow-y-auto scrollbar-hide p-4 md:p-8 pt-0 md:pt-0">
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-10">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mb-10">
                     {SHOP_ITEMS.map(item => {
                         const owned = item.type === 'skin' ? inventory.skins.includes(item.id) : false;
                         const equipped = inventory.currentSkin === item.id;
