@@ -83,14 +83,14 @@ function App() {
   // Teacher Mode State
   const [teacherSelectedIndices, setTeacherSelectedIndices] = useState<number[]>([]);
   const [teacherSearchTerm, setTeacherSearchTerm] = useState('');
-  const [teacherSelectedCategory, setTeacherSelectedCategory] = useState<'all' | 'berachot' | 'bava_kamma' | 'common'>('all');
+  const [teacherSelectedCategory, setTeacherSelectedCategory] = useState<'all' | 'berachot' | 'bava_kamma' | 'common' | 'grade_7' | 'grade_8' | 'grade_9'>('all');
   const [teacherAuthPass, setTeacherAuthPass] = useState('');
   const [isTeacherAuthenticated, setIsTeacherAuthenticated] = useState(false);
   
   // Add Word Form State
   const [newWordAramaic, setNewWordAramaic] = useState('');
   const [newWordHebrew, setNewWordHebrew] = useState('');
-  const [newWordCategory, setNewWordCategory] = useState<'common' | 'berachot' | 'bava_kamma'>('common');
+  const [newWordCategory, setNewWordCategory] = useState<'common' | 'berachot' | 'bava_kamma' | 'grade_7' | 'grade_8' | 'grade_9'>('common');
   const [isAddingWord, setIsAddingWord] = useState(false);
 
   const [inventory, setInventory] = useState(() => ({
@@ -743,7 +743,10 @@ const equipSkin = (id: string) => {
   const menuCategoryDecor: Record<GameConfig['category'], { accent: string }> = {
     common: { accent: 'var(--rk-blue)' },
     berachot: { accent: 'var(--rk-gold)' },
-    bava_kamma: { accent: 'var(--rk-purple)' }
+    bava_kamma: { accent: 'var(--rk-purple)' },
+    grade_7: { accent: 'var(--rk-green)' },
+    grade_8: { accent: 'var(--rk-orange)' },
+    grade_9: { accent: 'var(--rk-teal)' }
   };
 
   const difficultyDecor = menuDifficultyDecor[config.difficulty];
@@ -1046,6 +1049,9 @@ const equipSkin = (id: string) => {
                                   <option value="common">מילים נפוצות</option>
                                   <option value="berachot">בית ספר</option>
                                   <option value="bava_kamma">אוכל ומטבח</option>
+                                  <option value="grade_7">כיתה ז'</option>
+                                  <option value="grade_8">כיתה ח'</option>
+                                  <option value="grade_9">כיתה ט'</option>
                               </select>
                               <span className="rk-select-caret">▾</span>
                             </div>
@@ -1218,7 +1224,10 @@ const equipSkin = (id: string) => {
                                   { id: 'all', label: 'הכל' },
                                   { id: 'berachot', label: 'בית ספר' },
                                   { id: 'bava_kamma', label: 'אוכל ומטבח' },
-                                  { id: 'common', label: 'נפוצות' }
+                                  { id: 'common', label: 'נפוצות' },
+                                  { id: 'grade_7', label: 'כיתה ז\'' },
+                                  { id: 'grade_8', label: 'כיתה ח\'' },
+                                  { id: 'grade_9', label: 'כיתה ט\'' }
                               ].map(cat => (
                                   <button 
                                       key={cat.id}
@@ -1281,6 +1290,9 @@ const equipSkin = (id: string) => {
                                     <option value="common">מילים נפוצות</option>
                                     <option value="berachot">בית ספר</option>
                                     <option value="bava_kamma">אוכל ומטבח</option>
+                                    <option value="grade_7">כיתה ז'</option>
+                                    <option value="grade_8">כיתה ח'</option>
+                                    <option value="grade_9">כיתה ט'</option>
                                 </select>
                             </div>
                             <div className="p-4 bg-blue-900/20 rounded-xl border border-blue-800 text-xs text-blue-300">

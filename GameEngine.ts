@@ -5,7 +5,7 @@ import { Sound } from '../utils/sound';
 
 export interface GameConfig {
   difficulty: 'easy' | 'medium' | 'hard';
-  category: 'common' | 'berachot' | 'bava_kamma';
+  category: 'common' | 'berachot' | 'bava_kamma' | 'grade_7' | 'grade_8' | 'grade_9';
   skin: string;
   location?: string;
   modifier?: SugiaModifier;
@@ -376,6 +376,10 @@ export class GameEngine {
 
   triggerShake(intensity: number) { this.shakeAmount = intensity; }
 
+  // Cache for enemy pool check optimization
+  private hasActiveEnemies: boolean = false;
+  private enemyCheckCounter: number = 0;
+
   update(dt: number = 1.0) {
     if (this.isPaused || this.isTransitioning) return;
     this.gameFrame += dt;
@@ -400,6 +404,11 @@ export class GameEngine {
     this.updateParallax(dt);
     this.updateJetParticles(dt); // ENABLED - Premium engine trail effect
 
+    // Clean up boss projectiles in update loop, not draw loop
+    if (this.bossProjectiles.length > 0) {
+      this.bossProjectiles = this.bossProjectiles.filter(p => p && p.y < this.height + 50);
+    }
+
     if (this.playerExploding) {
         this.explosionTimer -= dt;
         if (this.explosionTimer <= 0) this.onGameOver(this.score);
@@ -420,8 +429,22 @@ export class GameEngine {
         this.updateBonuses(dt);
     }
     
-    this.particlePool.forEach(p => { if(p.active) p.update(dt); });
-    if (!this.enemyPool.some(e => e.active) && !this.boss && !this.playerExploding && !this.isTransitioning && Math.random() < 0.1 * dt) this.startRound();
+    // Optimize particle updates - use traditional loop instead of forEach
+    for (let i = 0; i < this.particlePool.length; i++) {
+      const p = this.particlePool[i];
+      if (p.active) p.update(dt);
+    }
+    
+    // Optimize enemy check - only check every 10 frames instead of every frame
+    this.enemyCheckCounter++;
+    if (this.enemyCheckCounter >= 10) {
+      this.hasActiveEnemies = this.enemyPool.some(e => e.active);
+      this.enemyCheckCounter = 0;
+    }
+    
+    if (!this.hasActiveEnemies && !this.boss && !this.playerExploding && !this.isTransitioning && Math.random() < 0.1 * dt) {
+      this.startRound();
+    }
   }
 
   spawnHazard() {
@@ -443,8 +466,10 @@ export class GameEngine {
   }
 
   updateProjectiles(dt: number) {
-      this.projectilePool.forEach(p => {
-          if (!p.active) return;
+      // Use traditional loop instead of forEach for better performance
+      for (let i = 0; i < this.projectilePool.length; i++) {
+          const p = this.projectilePool[i];
+          if (!p.active) continue;
           if (p.type === 'beam') { 
               p.life -= dt; 
               p.x = this.player.x; 
@@ -471,7 +496,7 @@ export class GameEngine {
               }
           }
           if (p.y < -400 || p.y > this.height + 400) p.active = false;
-      });
+      }
   }
 
   damageBoss(p: any) {
@@ -485,7 +510,15 @@ export class GameEngine {
   }
 
   applyHoming(p: any, dt: number) {
-      const target = this.enemyPool.find(e => e.active && e.isCorrect) || this.boss;
+      // Use traditional loop instead of find() for better performance
+      let target = this.boss;
+      for (let i = 0; i < this.enemyPool.length; i++) {
+          const e = this.enemyPool[i];
+          if (e.active && e.isCorrect) {
+              target = e;
+              break; // Found first correct enemy
+          }
+      }
       if (target) {
           const angle = Math.atan2(target.y - p.y, target.x - p.x);
           p.vx += Math.cos(angle) * 2.2 * dt; p.vy += Math.sin(angle) * 2.2 * dt;
@@ -583,10 +616,17 @@ export class GameEngine {
   handleMiss() {
       if (this.playerExploding) return;
       if (this.boss) this.bossDamageTaken = true; 
-      this.enemyPool.forEach(e => e.active = false);
+      // Use traditional loop for better performance
+      for (let i = 0; i < this.enemyPool.length; i++) {
+        this.enemyPool[i].active = false;
+      }
       this.hazards = [];
       this.bossProjectiles = [];
-      this.projectilePool.forEach(p => { if (p.type !== 'beam') p.active = false; });
+      // Use traditional loop instead of forEach
+      for (let i = 0; i < this.projectilePool.length; i++) {
+        const p = this.projectilePool[i];
+        if (p.type !== 'beam') p.active = false;
+      }
       if (this.shieldStrength > 0) {
           this.shieldStrength--; this.triggerShake(10); Sound.play('hit');
           this.onFeedback(this.shieldStrength === 1 ? "מגן נסדק!" : "מגן נשבר!", false);
@@ -617,12 +657,18 @@ export class GameEngine {
 
     if (shouldDrawComplexBg) {
       this.drawBackgroundTheme();
-      this.starLayers.forEach(layer => {
-          layer.forEach(s => {
-              this.ctx.globalAlpha = s.alpha; this.ctx.fillStyle = 'white';
-              this.ctx.beginPath(); this.ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); this.ctx.fill();
-          });
-      });
+      // Use traditional loops instead of forEach for better performance
+      for (let layerIdx = 0; layerIdx < this.starLayers.length; layerIdx++) {
+          const layer = this.starLayers[layerIdx];
+          for (let starIdx = 0; starIdx < layer.length; starIdx++) {
+              const s = layer[starIdx];
+              this.ctx.globalAlpha = s.alpha;
+              this.ctx.fillStyle = 'white';
+              this.ctx.beginPath();
+              this.ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+              this.ctx.fill();
+          }
+      }
     } else {
       // רקע פשוט כשלא מציירים את הרקע המורכב
       this.ctx.globalAlpha = 0.1;
@@ -694,9 +740,16 @@ export class GameEngine {
       const plasmaColor = this.cachedEngineColor.color;
       const secondaryColor = this.cachedEngineColor.secondaryColor;
 
-      // Draw all segments with premium quality
-      const leftParticles = this.jetParticles.filter((_, i) => i % 2 === 0);
-      const rightParticles = this.jetParticles.filter((_, i) => i % 2 === 1);
+      // Build arrays efficiently instead of using filter (better performance)
+      const leftParticles: typeof this.jetParticles = [];
+      const rightParticles: typeof this.jetParticles = [];
+      for (let i = 0; i < this.jetParticles.length; i++) {
+        if (i % 2 === 0) {
+          leftParticles.push(this.jetParticles[i]);
+        } else {
+          rightParticles.push(this.jetParticles[i]);
+        }
+      }
 
       // Function to draw premium engine trail
       const drawEngineTrail = (particles: typeof leftParticles) => {
@@ -735,8 +788,9 @@ export class GameEngine {
               this.ctx.stroke();
           }
 
-          // Draw premium particles
-          particles.forEach((p, idx) => {
+          // Draw premium particles - use traditional loop for better performance
+          for (let idx = 0; idx < particles.length; idx++) {
+              const p = particles[idx];
               // Outer glow
               const grad = this.ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
               grad.addColorStop(0, plasmaColor);
@@ -759,7 +813,7 @@ export class GameEngine {
               this.ctx.beginPath();
               this.ctx.arc(p.x, p.y, p.size * 0.8, 0, Math.PI * 2);
               this.ctx.fill();
-          });
+          }
       };
 
       // Draw both engine trails
@@ -768,9 +822,12 @@ export class GameEngine {
 
       // Special effects for specific skins
       if (this.config.skin === 'skin_torah' && leftParticles.length > 0) {
-          // Fire embers for Torah skin
-          [leftParticles, rightParticles].forEach(particles => {
-              particles.forEach(p => {
+          // Fire embers for Torah skin - use traditional loops for better performance
+          const particleArrays = [leftParticles, rightParticles];
+          for (let arrIdx = 0; arrIdx < particleArrays.length; arrIdx++) {
+              const particles = particleArrays[arrIdx];
+              for (let pIdx = 0; pIdx < particles.length; pIdx++) {
+                  const p = particles[pIdx];
                   if (Math.random() < 0.3) {
                       const emberGrad = this.ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
                       emberGrad.addColorStop(0, '#ffff00');
@@ -785,8 +842,8 @@ export class GameEngine {
                                    p.size * 1.5, 0, Math.PI * 2);
                       this.ctx.fill();
                   }
-              });
-          });
+              }
+          }
       }
 
       this.ctx.restore();
@@ -795,29 +852,56 @@ export class GameEngine {
   drawEntities() {
       // Performance optimization: draw particles less frequently on high-res displays
       const isHighRes = this.width > 1200;
-      if (!isHighRes || this.gameFrame % 2 === 0) { // Draw every frame on low-res, every 2nd frame on high-res
-        this.particlePool.forEach(p => { if (p.active) { this.ctx.globalAlpha = p.alpha; this.ctx.fillStyle = p.color; this.ctx.beginPath(); this.ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); this.ctx.fill(); } });
+      if (!isHighRes || this.gameFrame % 2 === 0) { 
+        // Use traditional loop instead of forEach for better performance
+        for (let i = 0; i < this.particlePool.length; i++) {
+          const p = this.particlePool[i];
+          if (p.active) {
+            this.ctx.globalAlpha = p.alpha;
+            this.ctx.fillStyle = p.color;
+            this.ctx.beginPath();
+            this.ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+            this.ctx.fill();
+          }
+        }
       }
       this.ctx.globalAlpha = 1;
-      this.enemyPool.forEach(e => { if (e.active) {
+      // Use traditional loop for enemies
+      for (let i = 0; i < this.enemyPool.length; i++) {
+        const e = this.enemyPool[i];
+        if (e.active) {
           if (this.config.modifier === 'blink' || (this.config.modifier === 'final' && this.gameFrame % 100 < 20)) {
             this.ctx.globalAlpha = 0.3 + Math.abs(Math.sin(this.gameFrame * 0.1)) * 0.7;
           }
           this.drawEnemy(e);
           this.ctx.globalAlpha = 1;
         }
-      });
+      }
       if (this.boss) this.drawBoss();
-      this.bonuses.forEach(b => this.drawBonus(b));
-      this.hazards.forEach(h => {
-        this.ctx.save(); this.ctx.font = '30px Rubik'; this.ctx.textAlign = 'center'; this.ctx.shadowBlur = 15; this.ctx.shadowColor = 'red';
-        this.ctx.fillText(h.text, h.x, h.y); this.ctx.restore();
-      });
+      // Use traditional loops for bonuses and hazards
+      for (let i = 0; i < this.bonuses.length; i++) {
+        this.drawBonus(this.bonuses[i]);
+      }
+      for (let i = 0; i < this.hazards.length; i++) {
+        const h = this.hazards[i];
+        this.ctx.save();
+        this.ctx.font = '30px Rubik';
+        this.ctx.textAlign = 'center';
+        // Reduce shadow operations for performance
+        if (!isHighRes) {
+          this.ctx.shadowBlur = 15;
+          this.ctx.shadowColor = 'red';
+        }
+        this.ctx.fillText(h.text, h.x, h.y);
+        this.ctx.restore();
+      }
       if (!this.playerExploding) this.drawPlayer();
       // Draw jet particles after player for premium visual effect
       this.drawJetParticles(); // ENABLED - Premium engine trail
-      this.bossProjectiles.forEach(p => {
-          if (!p) return;
+      // Use traditional loop for better performance
+      for (let i = 0; i < this.bossProjectiles.length; i++) {
+          const p = this.bossProjectiles[i];
+          if (!p) continue;
           this.ctx.save();
           this.ctx.fillStyle = '#ef4444';
           // Performance optimization: reduce shadow on high-res displays
@@ -826,14 +910,18 @@ export class GameEngine {
           }
           this.ctx.beginPath(); this.ctx.arc(p.x, p.y, 15, 0, Math.PI*2); this.ctx.fill(); this.ctx.restore();
           if(Math.hypot(p.x - this.player.x, p.y - this.player.y) < 32) { this.handleMiss(); p.y = 5000; }
-      });
-      this.bossProjectiles = this.bossProjectiles.filter(p => p.y < this.height + 50);
+      }
+      // Filter moved to update() to avoid doing it every frame in draw
       this.ctx.save();
       this.ctx.globalCompositeOperation = 'lighter';
       // Performance optimization: draw projectiles less frequently on high-res
       const shouldDrawProjectiles = !isHighRes || this.gameFrame % 2 === 0;
       if (shouldDrawProjectiles) {
-        this.projectilePool.forEach(p => { if (p.active) this.drawProjectile(p); });
+        // Use traditional loop instead of forEach
+        for (let i = 0; i < this.projectilePool.length; i++) {
+          const p = this.projectilePool[i];
+          if (p.active) this.drawProjectile(p);
+        }
       }
       this.ctx.restore();
   }

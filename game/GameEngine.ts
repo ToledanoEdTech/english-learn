@@ -5,7 +5,7 @@ import { Sound } from '../utils/sound';
 
 export interface GameConfig {
   difficulty: 'easy' | 'medium' | 'hard';
-  category: 'common' | 'berachot' | 'bava_kamma';
+  category: 'common' | 'berachot' | 'bava_kamma' | 'grade_7' | 'grade_8' | 'grade_9';
   skin: string;
   location?: string;
   modifier?: SugiaModifier;
