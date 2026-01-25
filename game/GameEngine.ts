@@ -47,18 +47,21 @@ class PoolableEnemy {
     baseX = 0; waveOffset = 0;
 }
 
-type BossId = 'tannina' | 'koy' | 'shed' | 'ashmedai' | 'agirat' | 'leviathan' | 'ziz';
+type BossId = 'alpha_bot' | 'the_bug' | 'sound_wave' | 'twister' | 'the_faker' | 'blocker' | 'robo_rule' | 'dr_brain' | 'king_word' | 'the_master';
 
-const BOSS_SEQUENCE: BossId[] = ['tannina', 'koy', 'shed', 'ashmedai', 'agirat', 'leviathan', 'ziz'];
+const BOSS_SEQUENCE: BossId[] = ['alpha_bot', 'the_bug', 'sound_wave', 'twister', 'the_faker', 'blocker', 'robo_rule', 'dr_brain', 'king_word', 'the_master'];
 
 const BOSS_NAMES: Record<BossId, string> = {
-    tannina: 'נחש המילים',
-    koy: 'זאב הביטויים',
-    shed: 'שד הטעויות',
-    ashmedai: 'מלך הדקדוק',
-    agirat: 'מכשפת האיות',
-    leviathan: 'ענק אוצר המילים',
-    ziz: 'עיט המילים'
+    alpha_bot: 'Alpha-Bot',
+    the_bug: 'The Bug',
+    sound_wave: 'Sound-Wave',
+    twister: 'Twister',
+    the_faker: 'The Faker',
+    blocker: 'Blocker',
+    robo_rule: 'Robo-Rule',
+    dr_brain: 'Dr. Brain',
+    king_word: 'King Word',
+    the_master: 'The Master'
 };
 
 type BossProjectile = {
@@ -104,14 +107,14 @@ export class GameEngine {
   bossTextureStatus: Partial<Record<BossId, 'idle' | 'loading' | 'loaded' | 'error'>> = {};
   bossSprites: Partial<Record<BossId, HTMLCanvasElement | null>> = {};
   
-  // --- Boss cycle: after defeating Ziz, loop bosses from the start with stronger stats ---
+  // --- Boss cycle: after defeating The Master, loop bosses from the start with stronger stats ---
   bossCycleMode: boolean = false;
   bossSequenceIndex: number = 0; // next boss in BOSS_SEQUENCE (when bossCycleMode=true)
   bossLoop: number = 0; // 0 = before loop; 1+ = loop difficulty
 
   bossProjectiles: BossProjectile[] = [];
   bossProjectileSprites: Partial<Record<BossId, HTMLCanvasElement>> = {};
-  maxBossProjectiles: number = 220;
+  maxBossProjectiles: number = 150; // הפחתה מ-220 ל-150 לביצועים טובים יותר
   bonuses: any[] = [];
   hazards: any[] = [];
   boss: any = null;
@@ -1656,7 +1659,7 @@ export class GameEngine {
   private getBossTextureDrawBox(id: BossId): { w: number; h: number; offsetY: number } {
     // Tuned to roughly match the procedural bosses' footprint (before the mobile 0.75 scale in drawBoss()).
     // offsetY shifts the image down a bit so the boss "sits" similarly to the procedural art.
-    if (id === 'ziz') return { w: 560, h: 420, offsetY: 30 };
+    if (id === 'the_master' || id === 'blocker') return { w: 560, h: 420, offsetY: 30 };
     return { w: 520, h: 420, offsetY: 30 };
   }
 
@@ -1743,13 +1746,16 @@ export class GameEngine {
     // Image-based (replace these files to change bosses in-game).
     // If a boss image is missing, we fall back to the procedural boss rendering.
     const imageCandidates: Record<BossId, string[]> = {
-      tannina: ['bosses/tannina.webp', 'bosses/tannina.png', 'bosses/boss_tannina.png', 'bosses/skin_tannina.png'],
-      koy: ['bosses/koy.webp', 'bosses/koy.png', 'bosses/boss_koy.png', 'bosses/skin_koy.png'],
-      shed: ['bosses/shed.webp', 'bosses/shed.png', 'bosses/boss_shed.png', 'bosses/skin_shed.png'],
-      ashmedai: ['bosses/ashmedai.webp', 'bosses/ashmedai.png', 'bosses/boss_ashmedai.png', 'bosses/skin_ashmedai.png'],
-      agirat: ['bosses/agirat.webp', 'bosses/agirat.png', 'bosses/boss_agirat.png', 'bosses/skin_agirat.png'],
-      leviathan: ['bosses/leviathan.webp', 'bosses/leviathan.png', 'bosses/boss_leviathan.png', 'bosses/skin_leviathan.png'],
-      ziz: ['bosses/ziz.webp', 'bosses/ziz.png', 'bosses/boss_ziz.png', 'bosses/skin_ziz.png']
+      alpha_bot: ['bosses/alpha_bot.webp', 'bosses/alpha_bot.png', 'bosses/boss_alpha_bot.png', 'bosses/skin_alpha_bot.png'],
+      the_bug: ['bosses/the_bug.webp', 'bosses/the_bug.png', 'bosses/boss_the_bug.png', 'bosses/skin_the_bug.png'],
+      sound_wave: ['bosses/sound_wave.webp', 'bosses/sound_wave.png', 'bosses/boss_sound_wave.png', 'bosses/skin_sound_wave.png'],
+      twister: ['bosses/twister.webp', 'bosses/twister.png', 'bosses/boss_twister.png', 'bosses/skin_twister.png'],
+      the_faker: ['bosses/the_faker.webp', 'bosses/the_faker.png', 'bosses/boss_the_faker.png', 'bosses/skin_the_faker.png'],
+      blocker: ['bosses/blocker.webp', 'bosses/blocker.png', 'bosses/boss_blocker.png', 'bosses/skin_blocker.png'],
+      robo_rule: ['bosses/robo_rule.webp', 'bosses/robo_rule.png', 'bosses/boss_robo_rule.png', 'bosses/skin_robo_rule.png'],
+      dr_brain: ['bosses/dr_brain.webp', 'bosses/dr_brain.png', 'bosses/boss_dr_brain.png', 'bosses/skin_dr_brain.png'],
+      king_word: ['bosses/king_word.webp', 'bosses/king_word.png', 'bosses/boss_king_word.png', 'bosses/skin_king_word.png'],
+      the_master: ['bosses/the_master.webp', 'bosses/the_master.png', 'bosses/boss_the_master.png', 'bosses/skin_the_master.png']
     };
 
     (Object.keys(imageCandidates) as BossId[]).forEach((id) => {
@@ -2012,34 +2018,43 @@ export class GameEngine {
   }
 
   private getBossIdForLevel(level: number): BossId {
-      if (level === 1) return 'tannina';
-      if (level === 8) return 'koy';
-      if (level === 15) return 'shed';
-      if (level === 22) return 'ashmedai';
-      if (level === 29) return 'agirat';
-      if (level === 36) return 'leviathan';
-      return 'ziz';
+      if (level === 1) return 'alpha_bot';
+      if (level === 8) return 'the_bug';
+      if (level === 15) return 'sound_wave';
+      if (level === 22) return 'twister';
+      if (level === 29) return 'the_faker';
+      if (level === 36) return 'blocker';
+      if (level === 43) return 'robo_rule';
+      if (level === 50) return 'dr_brain';
+      if (level === 57) return 'king_word';
+      return 'the_master';
   }
 
   private getBossDifficultyMult(id: BossId): number {
       // Slightly increasing base difficulty across the sequence
-      if (id === 'tannina') return 1.0;
-      if (id === 'koy') return 1.05;
-      if (id === 'shed') return 1.10;
-      if (id === 'ashmedai') return 1.15;
-      if (id === 'agirat') return 1.18;
-      if (id === 'leviathan') return 1.22;
-      return 1.28; // ziz
+      if (id === 'alpha_bot') return 1.0;
+      if (id === 'the_bug') return 1.05;
+      if (id === 'sound_wave') return 1.10;
+      if (id === 'twister') return 1.15;
+      if (id === 'the_faker') return 1.18;
+      if (id === 'blocker') return 1.22;
+      if (id === 'robo_rule') return 1.25;
+      if (id === 'dr_brain') return 1.28;
+      if (id === 'king_word') return 1.32;
+      return 1.38; // the_master
   }
 
   private getBossThemeColor(id: BossId): string {
-      if (id === 'tannina') return '#60a5fa';
-      if (id === 'koy') return '#fbbf24';
-      if (id === 'shed') return '#a855f7';
-      if (id === 'ashmedai') return '#ef4444';
-      if (id === 'agirat') return '#ec4899';
-      if (id === 'leviathan') return '#22d3ee';
-      return '#e2e8f0'; // ziz
+      if (id === 'alpha_bot') return '#fb923c'; // Orange metallic
+      if (id === 'the_bug') return '#22c55e'; // Green neon
+      if (id === 'sound_wave') return '#3b82f6'; // Blue
+      if (id === 'twister') return '#fbbf24'; // Yellow
+      if (id === 'the_faker') return '#ffffff'; // Black/white
+      if (id === 'blocker') return '#fbbf24'; // Yellow/black
+      if (id === 'robo_rule') return '#3b82f6'; // Blue (police)
+      if (id === 'dr_brain') return '#a855f7'; // Purple/pink
+      if (id === 'king_word') return '#fbbf24'; // Gold
+      return '#6366f1'; // Purple/dark (the_master - galaxy)
   }
 
   private getBossAuraSprite(id: BossId): HTMLCanvasElement {
@@ -2226,8 +2241,8 @@ export class GameEngine {
           this.spawnExplosion(this.player.x, this.player.y, '#ef4444', 40);
           this.onStatsUpdate({ lives: this.lives, combo: 0 });
           
-          // הצגת הפירוש הנכון כשטועים
-          if (this.currentWordObj && this.onWrongAnswer) {
+          // הצגת הפירוש הנכון כשטועים (רק אם אין בוס פעיל)
+          if (!this.boss && this.currentWordObj && this.onWrongAnswer) {
               this.onWrongAnswer(this.currentWordObj.aramaic, this.currentWordObj.hebrew);
           }
           
@@ -2563,13 +2578,22 @@ export class GameEngine {
         this.ctx.fillText(h.text, h.x, h.y); this.ctx.restore();
       });
       if (!this.playerExploding) this.drawPlayer();
-      this.bossProjectiles.forEach(p => {
-          if (!p) return;
+      // Draw boss projectiles (collision check is done in updateBoss, no need to check again here)
+      for (let i = 0; i < this.bossProjectiles.length; i++) {
+          const p = this.bossProjectiles[i];
+          if (!p) continue;
           this.drawBossProjectile(p);
-          const hitRadius = p.radius ?? 28;
-          if(Math.hypot(p.x - this.player.x, p.y - this.player.y) < hitRadius) { this.handleMiss(); p.y = this.height + hitRadius; }
-      });
-      this.bossProjectiles = this.bossProjectiles.filter(p => p.y < this.height + 120 && p.x > -120 && p.x < this.width + 120);
+      }
+      // Clean up off-screen projectiles (optimized)
+      let writeIdx = 0;
+      for (let i = 0; i < this.bossProjectiles.length; i++) {
+          const p = this.bossProjectiles[i];
+          if (p && p.y < this.height + 120 && p.x > -120 && p.x < this.width + 120) {
+              if (writeIdx !== i) this.bossProjectiles[writeIdx] = p;
+              writeIdx++;
+          }
+      }
+      this.bossProjectiles.length = writeIdx;
       this.ctx.save();
       this.ctx.globalCompositeOperation = 'lighter';
       this.projectilePool.forEach(p => { if (p.active) this.drawProjectile(p); });
@@ -3745,142 +3769,200 @@ export class GameEngine {
       const baseR = 24;
       ctx.translate(center, center);
 
-      const drawTannina = () => {
-          const g = ctx.createRadialGradient(0, 0, 0, 0, 0, baseR * 1.45);
-          g.addColorStop(0, '#fdf4ff');
-          g.addColorStop(0.35, '#e9d5ff');
-          g.addColorStop(1, 'rgba(216,180,254,0)');
-          ctx.fillStyle = g;
-          ctx.shadowBlur = 22;
-          ctx.shadowColor = '#d8b4fe';
+      // Alpha-Bot: Colorful dice with letters A, B, C
+      const drawAlphaBot = () => {
+          ctx.shadowBlur = 16;
+          ctx.shadowColor = '#fb923c';
+          // Draw cube shape
+          const side = baseR * 1.2;
+          ctx.fillStyle = '#fb923c';
+          ctx.strokeStyle = '#ea580c';
+          ctx.lineWidth = 2;
+          // Front face
+          ctx.fillRect(-side/2, -side/2, side, side);
+          ctx.strokeRect(-side/2, -side/2, side, side);
+          // Letter (A, B, or C - will be randomized)
+          ctx.fillStyle = '#ffffff';
+          ctx.font = `bold ${baseR * 0.8}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('A', 0, 0);
+      };
+
+      // The Bug: Binary digits 0 and 1 in green neon
+      const drawTheBug = () => {
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = '#22c55e';
+          ctx.fillStyle = '#22c55e';
+          ctx.font = `bold ${baseR * 1.2}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('0', 0, 0);
+      };
+
+      // Sound-Wave: Sound wave rings or musical notes
+      const drawSoundWave = () => {
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.shadowBlur = 18;
+          ctx.shadowColor = '#3b82f6';
+          ctx.strokeStyle = '#60a5fa';
+          ctx.lineWidth = 3;
+          // Draw expanding ring
+          ctx.beginPath();
+          ctx.arc(0, 0, baseR * 0.8, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, 0, baseR * 0.5, 0, Math.PI * 2);
+          ctx.stroke();
+          // Musical note
+          ctx.fillStyle = '#3b82f6';
+          ctx.font = `${baseR * 1.0}px Arial`;
+          ctx.fillText('♪', 0, baseR * 0.3);
+      };
+
+      // Twister: Bolts and nuts flying
+      const drawTwister = () => {
+          ctx.shadowBlur = 12;
+          ctx.shadowColor = '#fbbf24';
+          // Draw bolt (hexagon)
+          ctx.fillStyle = '#fbbf24';
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+              const ang = (i / 6) * Math.PI * 2;
+              const rad = baseR * 0.9;
+              if (i === 0) ctx.moveTo(Math.cos(ang) * rad, Math.sin(ang) * rad);
+              else ctx.lineTo(Math.cos(ang) * rad, Math.sin(ang) * rad);
+          }
+          ctx.closePath();
+          ctx.fill();
+          // Center circle (nut hole)
+          ctx.fillStyle = '#020617';
+          ctx.beginPath();
+          ctx.arc(0, 0, baseR * 0.3, 0, Math.PI * 2);
+          ctx.fill();
+      };
+
+      // The Faker: Question marks that change color (larger)
+      const drawTheFaker = () => {
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = '#ffffff';
+          ctx.fillStyle = '#ffffff';
+          ctx.font = `bold ${baseR * 1.8}px Arial`; // הגדלה מ-1.1 ל-1.8
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('?', 0, 0);
+      };
+
+      // Blocker: STOP mines
+      const drawBlocker = () => {
+          ctx.shadowBlur = 14;
+          ctx.shadowColor = '#fbbf24';
+          // Yellow/black warning circle
+          ctx.fillStyle = '#fbbf24';
           ctx.beginPath();
           ctx.arc(0, 0, baseR, 0, Math.PI * 2);
           ctx.fill();
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-          ctx.beginPath();
-          ctx.arc(0, 0, baseR * 0.7, 0, Math.PI * 2);
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 3;
           ctx.stroke();
+          // STOP text
+          ctx.fillStyle = '#000000';
+          ctx.font = `bold ${baseR * 0.5}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('STOP', 0, 0);
       };
 
-      const drawKoy = () => {
-          const r = baseR * 1.05;
-          ctx.shadowBlur = 8;
-          ctx.shadowColor = '#4b5563';
-          ctx.fillStyle = '#9ca3af';
-          ctx.beginPath();
-          for (let i = 0; i < 7; i++) {
-              const ang = (i / 7) * Math.PI * 2;
-              const jag = 0.8 + (i % 2 === 0 ? 0.18 : -0.05);
-              const rad = r * jag;
-              if (i === 0) ctx.moveTo(Math.cos(ang) * rad, Math.sin(ang) * rad);
-              else ctx.lineTo(Math.cos(ang) * rad, Math.sin(ang) * rad);
-          }
-          ctx.closePath();
-          ctx.fill();
-          ctx.strokeStyle = '#1f2937';
-          ctx.lineWidth = 1.4;
-          ctx.stroke();
-      };
-
-      const drawShed = () => {
-          ctx.globalCompositeOperation = 'lighter';
-          ctx.shadowBlur = 14;
-          ctx.shadowColor = '#7c3aed';
-          const spike = baseR * 1.5;
-          ctx.fillStyle = '#4c1d95';
-          ctx.beginPath();
-          for (let i = 0; i < 10; i++) {
-              const ang = (i / 10) * Math.PI * 2;
-              const rad = i % 2 === 0 ? spike : baseR * 0.7;
-              if (i === 0) ctx.moveTo(Math.cos(ang) * rad, Math.sin(ang) * rad);
-              else ctx.lineTo(Math.cos(ang) * rad, Math.sin(ang) * rad);
-          }
-          ctx.closePath();
-          ctx.fill();
-          const innerG = ctx.createRadialGradient(0, 0, 0, 0, 0, baseR);
-          innerG.addColorStop(0, '#c084fc');
-          innerG.addColorStop(1, 'rgba(124,58,237,0)');
-          ctx.fillStyle = innerG;
-          ctx.beginPath();
-          ctx.arc(0, 0, baseR * 0.9, 0, Math.PI * 2);
-          ctx.fill();
-      };
-
-      const drawAshmedai = () => {
+      // Robo-Rule: Laser ruler lines and no-entry signs (thicker)
+      const drawRoboRule = () => {
           ctx.rotate(Math.PI / 2);
-          const flameG = ctx.createLinearGradient(0, -baseR * 1.6, 0, baseR * 1.2);
-          flameG.addColorStop(0, '#fff7ed');
-          flameG.addColorStop(0.35, '#f97316');
-          flameG.addColorStop(1, 'rgba(239,68,68,0.15)');
-          ctx.fillStyle = flameG;
+          ctx.shadowBlur = 25;
+          ctx.shadowColor = '#3b82f6';
+          ctx.strokeStyle = '#60a5fa';
+          ctx.lineWidth = 8; // עבות יותר מ-4
+          // Long ruler line
+          ctx.beginPath();
+          ctx.moveTo(0, -baseR * 1.8);
+          ctx.lineTo(0, baseR * 1.8);
+          ctx.stroke();
+          // Inner bright core
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(0, -baseR * 1.8);
+          ctx.lineTo(0, baseR * 1.8);
+          ctx.stroke();
+          // Ruler marks
+          ctx.fillStyle = '#3b82f6';
+          for (let i = -1; i <= 1; i++) {
+              ctx.fillRect(-4, i * baseR * 0.7, 8, 3);
+          }
+      };
+
+      // Dr. Brain: Lightbulb ideas and green chemical bubbles
+      const drawDrBrain = () => {
+          ctx.globalCompositeOperation = 'lighter';
           ctx.shadowBlur = 18;
-          ctx.shadowColor = '#f97316';
-          ctx.beginPath();
-          ctx.moveTo(0, -baseR * 1.5);
-          ctx.quadraticCurveTo(baseR * 0.95, baseR * 0.2, 0, baseR * 1.2);
-          ctx.quadraticCurveTo(-baseR * 0.95, baseR * 0.2, 0, -baseR * 1.5);
-          ctx.fill();
-          ctx.fillStyle = '#ffffff';
-          ctx.shadowBlur = 6;
-          ctx.beginPath();
-          ctx.ellipse(0, -baseR * 0.2, baseR * 0.35, baseR * 0.5, 0, 0, Math.PI * 2);
-          ctx.fill();
-      };
-
-      const drawAgirat = () => {
-          ctx.globalCompositeOperation = 'lighter';
-          ctx.shadowBlur = 14;
-          ctx.shadowColor = '#f472b6';
-          const r2 = baseR * 1.05;
-          ctx.fillStyle = '#ec4899';
-          ctx.beginPath();
-          ctx.moveTo(0, -r2);
-          ctx.quadraticCurveTo(r2 * 0.95, -r2 * 0.2, 0, r2);
-          ctx.quadraticCurveTo(-r2 * 0.95, -r2 * 0.2, 0, -r2);
-          ctx.fill();
-          const swirl = ctx.createRadialGradient(0, 0, 0, 0, 0, baseR);
-          swirl.addColorStop(0, '#ffe4f3');
-          swirl.addColorStop(1, 'rgba(244,114,182,0)');
-          ctx.fillStyle = swirl;
-          ctx.beginPath();
-          ctx.arc(0, 0, baseR * 0.85, 0, Math.PI * 2);
-          ctx.fill();
-      };
-
-      const drawLeviathan = () => {
-          const shardLen = baseR * 1.7;
-          ctx.rotate(Math.PI / 2);
-          const g = ctx.createLinearGradient(0, -shardLen, 0, shardLen * 0.25);
-          g.addColorStop(0, '#e0f2fe');
-          g.addColorStop(0.4, '#22d3ee');
-          g.addColorStop(1, 'rgba(14,165,233,0.1)');
-          ctx.fillStyle = g;
-          ctx.shadowBlur = 14;
-          ctx.shadowColor = '#22d3ee';
-          ctx.beginPath();
-          ctx.moveTo(0, -shardLen);
-          ctx.lineTo(baseR * 0.9, shardLen * 0.2);
-          ctx.lineTo(0, shardLen * 0.55);
-          ctx.lineTo(-baseR * 0.9, shardLen * 0.2);
-          ctx.closePath();
-          ctx.fill();
-      };
-
-      const drawZiz = () => {
-          ctx.rotate(Math.PI / 2);
-          ctx.shadowBlur = 12;
           ctx.shadowColor = '#fbbf24';
-          const g = ctx.createLinearGradient(-baseR, -baseR * 1.3, baseR, baseR * 0.8);
-          g.addColorStop(0, '#fff7d6');
-          g.addColorStop(0.5, '#facc15');
-          g.addColorStop(1, 'rgba(250,204,21,0)');
+          // Lightbulb
+          ctx.fillStyle = '#fbbf24';
+          ctx.beginPath();
+          ctx.arc(0, -baseR * 0.3, baseR * 0.6, 0, Math.PI * 2);
+          ctx.fill();
+          // Bulb base
+          ctx.fillRect(-baseR * 0.2, baseR * 0.3, baseR * 0.4, baseR * 0.3);
+      };
+
+      // King Word: Gold coins or fountain pens
+      const drawKingWord = () => {
+          ctx.shadowBlur = 16;
+          ctx.shadowColor = '#fbbf24';
+          // Gold coin
+          const g = ctx.createRadialGradient(0, 0, 0, 0, 0, baseR);
+          g.addColorStop(0, '#fde047');
+          g.addColorStop(0.5, '#fbbf24');
+          g.addColorStop(1, '#d97706');
           ctx.fillStyle = g;
           ctx.beginPath();
-          ctx.moveTo(0, -baseR * 1.3);
-          ctx.bezierCurveTo(baseR * 0.9, -baseR * 0.9, baseR * 0.9, baseR * 0.5, 0, baseR * 0.9);
-          ctx.bezierCurveTo(-baseR * 0.9, baseR * 0.5, -baseR * 0.9, -baseR * 0.9, 0, -baseR * 1.3);
+          ctx.arc(0, 0, baseR, 0, Math.PI * 2);
           ctx.fill();
+          ctx.strokeStyle = '#a16207';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          // $ symbol
+          ctx.fillStyle = '#ffffff';
+          ctx.font = `bold ${baseR * 0.7}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('$', 0, 0);
+      };
+
+      // The Master: Dark purple energy orbs (black holes)
+      const drawTheMaster = () => {
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.shadowBlur = 24;
+          ctx.shadowColor = '#6366f1';
+          // Dark purple/black hole
+          const g = ctx.createRadialGradient(0, 0, 0, 0, 0, baseR * 1.2);
+          g.addColorStop(0, '#1e1b4b');
+          g.addColorStop(0.4, '#312e81');
+          g.addColorStop(0.8, '#6366f1');
+          g.addColorStop(1, 'rgba(99,102,241,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(0, 0, baseR * 1.1, 0, Math.PI * 2);
+          ctx.fill();
+          // Stars around it
+          ctx.fillStyle = '#ffffff';
+          for (let i = 0; i < 6; i++) {
+              const ang = (i / 6) * Math.PI * 2;
+              const x = Math.cos(ang) * baseR * 0.8;
+              const y = Math.sin(ang) * baseR * 0.8;
+              ctx.beginPath();
+              ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+              ctx.fill();
+          }
       };
 
       const drawDefault = () => {
@@ -3892,13 +3974,16 @@ export class GameEngine {
           ctx.fill();
       };
 
-      if (owner === 'tannina') drawTannina();
-      else if (owner === 'koy') drawKoy();
-      else if (owner === 'shed') drawShed();
-      else if (owner === 'ashmedai') drawAshmedai();
-      else if (owner === 'agirat') drawAgirat();
-      else if (owner === 'leviathan') drawLeviathan();
-      else if (owner === 'ziz') drawZiz();
+      if (owner === 'alpha_bot') drawAlphaBot();
+      else if (owner === 'the_bug') drawTheBug();
+      else if (owner === 'sound_wave') drawSoundWave();
+      else if (owner === 'twister') drawTwister();
+      else if (owner === 'the_faker') drawTheFaker();
+      else if (owner === 'blocker') drawBlocker();
+      else if (owner === 'robo_rule') drawRoboRule();
+      else if (owner === 'dr_brain') drawDrBrain();
+      else if (owner === 'king_word') drawKingWord();
+      else if (owner === 'the_master') drawTheMaster();
       else drawDefault();
 
       this.bossProjectileSprites[owner] = c;
@@ -3907,25 +3992,70 @@ export class GameEngine {
 
   private drawBossProjectile(p: BossProjectile) {
       if (!p) return;
-      const owner: BossId = p.owner || 'tannina';
+      const owner: BossId = p.owner || 'alpha_bot';
       const radius = p.radius ?? 18;
       const sprite = this.getBossProjectileSprite(owner);
       const baseRadius = 24;
-      const scalePulse = owner === 'tannina' ? 1 + Math.sin((p.tick || 0) * 0.08) * 0.05 : 1;
+      
+      // Special effects per boss
+      let scalePulse = 1;
+      if (owner === 'alpha_bot' || owner === 'sound_wave') {
+          scalePulse = 1 + Math.sin((p.tick || 0) * 0.08) * 0.05;
+      }
+      
       const scale = (radius / baseRadius) * scalePulse;
 
       this.ctx.save();
+      
+      // Color changing effect for The Faker (using globalAlpha instead of filter for performance)
+      let fakerAlpha = 1;
+      if (owner === 'the_faker') {
+          fakerAlpha = 0.7 + Math.sin((p.tick || 0) * 0.3) * 0.3;
+      }
+      
       this.ctx.translate(p.x, p.y);
       let rot = p.spin || 0;
-      if (owner === 'ashmedai' || owner === 'leviathan' || owner === 'ziz') {
+      
+      // Rotation based on movement direction
+      if (owner === 'robo_rule' || owner === 'twister' || owner === 'king_word') {
           rot += Math.atan2(p.vy || 1, p.vx || 0) + Math.PI / 2;
       }
+      
+      // Spinning projectiles
+      if (owner === 'alpha_bot' || owner === 'twister') {
+          rot += (p.tick || 0) * 0.15;
+      }
+      
       if (rot) this.ctx.rotate(rot);
-      if (owner === 'tannina' || owner === 'shed' || owner === 'agirat') {
+      
+      // Lighter composite for glowing projectiles
+      if (owner === 'alpha_bot' || owner === 'the_bug' || owner === 'sound_wave' || 
+          owner === 'dr_brain' || owner === 'the_master') {
           this.ctx.globalCompositeOperation = 'lighter';
       }
+      
+      // Apply alpha for The Faker
+      if (owner === 'the_faker') {
+          this.ctx.globalAlpha = fakerAlpha;
+      }
+      
       this.ctx.scale(scale, scale);
-      this.ctx.drawImage(sprite, -sprite.width / 2, -sprite.height / 2);
+      
+      // Special handling for The Bug - draw binary digit based on variant (larger)
+      if (owner === 'the_bug') {
+          const digit = p.variant === '1' ? '1' : '0';
+          this.ctx.globalCompositeOperation = 'lighter';
+          this.ctx.shadowBlur = 20;
+          this.ctx.shadowColor = '#22c55e';
+          this.ctx.fillStyle = '#22c55e';
+          this.ctx.font = `bold ${baseRadius * 1.8}px Arial`; // הגדלה מ-1.2 ל-1.8
+          this.ctx.textAlign = 'center';
+          this.ctx.textBaseline = 'middle';
+          this.ctx.fillText(digit, 0, 0);
+      } else {
+          this.ctx.drawImage(sprite, -sprite.width / 2, -sprite.height / 2);
+      }
+      
       this.ctx.restore();
   }
 
@@ -3967,99 +4097,190 @@ export class GameEngine {
           const spd: number = typeof b.speedMult === 'number' ? b.speedMult : 1;
 
           // Attack patterns by boss (independent of level once bossCycleMode is enabled)
-          if (bossId === 'tannina') {
-              this.spawnBossProjectile(bossId, b.x - 120, b.y + 100, 0, 4.0 * spd, { radius: 16, variant: 'pulse' });
-              this.spawnBossProjectile(bossId, b.x + 120, b.y + 100, 0, 4.0 * spd, { radius: 16, variant: 'pulse' });
-          } else if (bossId === 'koy') {
+          if (bossId === 'alpha_bot') {
+              // Shoots colorful dice with letters A, B, C that spin in air
+              const letters = ['A', 'B', 'C'];
+              for(let i=-1; i<=1; i++) {
+                  this.spawnBossProjectile(
+                      bossId,
+                      b.x + i * 80,
+                      b.y + 100,
+                      i * 0.5 * spd,
+                      4.0 * spd,
+                      { radius: 18, spin: Math.random() * Math.PI * 2, variant: letters[Math.floor(Math.random() * 3)] }
+                  );
+              }
+          } else if (bossId === 'the_bug') {
+              // Shoots binary digits 0 and 1 in zigzag pattern
+              for(let i=-2; i<=2; i++) {
+                  const zigzag = Math.sin(this.gameFrame * 0.2 + i) * 2;
+                  this.spawnBossProjectile(
+                      bossId,
+                      b.x,
+                      b.y + 100,
+                      (i * 1.5 + zigzag) * spd,
+                      3.8 * spd,
+                      { radius: 16, variant: Math.random() < 0.5 ? '0' : '1' }
+                  );
+              }
+          } else if (bossId === 'sound_wave') {
+              // Shoots sound wave rings that expand, or musical notes (reduced from 6 to 4)
+              for(let i=0; i<4; i++) {
+                  const angle = (i/4) * Math.PI * 2;
+                  this.spawnBossProjectile(
+                      bossId,
+                      b.x,
+                      b.y + 100,
+                      Math.cos(angle) * 3.5 * spd,
+                      Math.sin(angle) * 3.5 * spd + 2.5 * spd,
+                      { radius: 20, variant: 'wave' }
+                  );
+              }
+          } else if (bossId === 'twister') {
+              // Throws bolts and nuts in all directions, occasional yellow lightning (reduced from 10 to 7)
+              for(let i=0; i<7; i++) {
+                  const angle = (i/7) * Math.PI * 2 + (this.gameFrame * 0.05);
+                  this.spawnBossProjectile(
+                      bossId,
+                      b.x,
+                      b.y + 100,
+                      Math.cos(angle) * 5.0 * spd,
+                      Math.sin(angle) * 5.0 * spd,
+                      { radius: 16, spin: Math.random() * Math.PI * 2, variant: 'bolt' }
+                  );
+              }
+              // Occasional lightning
+              if (Math.random() < 0.3) {
+                  const ang = Math.atan2(this.player.y - (b.y+100), this.player.x - b.x);
+                  this.spawnBossProjectile(
+                      bossId,
+                      b.x,
+                      b.y + 100,
+                      Math.cos(ang) * 6.0 * spd,
+                      Math.sin(ang) * 6.0 * spd,
+                      { radius: 14, variant: 'lightning' }
+                  );
+              }
+          } else if (bossId === 'the_faker') {
+              // Shoots spinning question marks that confuse
+              for(let i=-2; i<=2; i++) {
+                  this.spawnBossProjectile(
+                      bossId,
+                      b.x + i * 60,
+                      b.y + 100,
+                      i * 0.8 * spd,
+                      3.5 * spd,
+                      { radius: 18, spin: Math.random() * Math.PI * 2, variant: 'question' }
+                  );
+              }
+          } else if (bossId === 'blocker') {
+              // Releases STOP mines that fly towards player
+              const ang = Math.atan2(this.player.y - (b.y+100), this.player.x - b.x);
+              for(let i=-2; i<=2; i++) {
+                  const spreadAngle = ang + (i * 0.15);
+                  this.spawnBossProjectile(
+                      bossId,
+                      b.x + i * 80,
+                      b.y + 100,
+                      Math.cos(spreadAngle) * 4.5 * spd,
+                      Math.sin(spreadAngle) * 4.5 * spd,
+                      { radius: 24, variant: 'mine' }
+                  );
+              }
+          } else if (bossId === 'robo_rule') {
+              // Shoots long laser ruler lines and no-entry signs
+              const ang = Math.atan2(this.player.y - (b.y+100), this.player.x - b.x);
+              for(let i=-1; i<=1; i++) {
+                  this.spawnBossProjectile(
+                      bossId,
+                      b.x,
+                      b.y + 100,
+                      Math.cos(ang + i * 0.15) * 5.5 * spd,
+                      Math.sin(ang + i * 0.15) * 5.5 * spd,
+                      { radius: 16, variant: 'ruler' }
+                  );
+              }
+              // No-entry signs
+              for(let i=0; i<4; i++) {
+                  const angle = (i/4) * Math.PI * 2;
+                  this.spawnBossProjectile(
+                      bossId,
+                      b.x,
+                      b.y + 100,
+                      Math.cos(angle) * 4.0 * spd,
+                      Math.sin(angle) * 4.0 * spd,
+                      { radius: 14, variant: 'noentry' }
+                  );
+              }
+          } else if (bossId === 'dr_brain') {
+              // Throws lightbulb ideas and green chemical bubbles (reduced from 8 to 6)
+              for(let i=0; i<6; i++) {
+                  const angle = (i/6) * Math.PI * 2;
+                  this.spawnBossProjectile(
+                      bossId,
+                      b.x,
+                      b.y + 100,
+                      Math.cos(angle) * 4.2 * spd,
+                      Math.sin(angle) * 4.2 * spd,
+                      { radius: 17, variant: Math.random() < 0.5 ? 'lightbulb' : 'bubble' }
+                  );
+              }
+          } else if (bossId === 'king_word') {
+              // Shoots gold coins or fountain pens with ink drops
+              const ang = Math.atan2(this.player.y - (b.y+100), this.player.x - b.x);
               for(let i=-2; i<=2; i++) {
                   this.spawnBossProjectile(
                       bossId,
                       b.x,
                       b.y + 100,
-                      i * 1.8 * spd,
-                      3.5 * spd,
-                      { radius: 18, spin: Math.random() * Math.PI * 2, seed: Math.random(), variant: 'rock' }
+                      Math.cos(ang + i * 0.2) * 4.8 * spd,
+                      Math.sin(ang + i * 0.2) * 4.8 * spd,
+                      { radius: 18, variant: Math.random() < 0.6 ? 'coin' : 'pen' }
                   );
               }
-          } else if (bossId === 'shed') {
-              for(let i=0; i<12; i++) { 
-                  const angle = (i/12) * Math.PI * 2; 
-                  this.spawnBossProjectile(
-                      bossId,
-                      b.x,
-                      b.y + 100,
-                      Math.cos(angle)*4.5*spd,
-                      Math.sin(angle)*4.5*spd,
-                      { radius: 15, variant: 'void', spin: Math.random() * 0.6 }
-                  ); 
-              }
-          } else if (bossId === 'ashmedai') {
-              // Targeted shots (5)
-              const ang = Math.atan2(this.player.y - (b.y+100), this.player.x - b.x);
-              for(let i=-2; i<=2; i++) this.spawnBossProjectile(
-                  bossId,
-                  b.x,
-                  b.y+100,
-                  Math.cos(ang+i*0.2)*5*spd,
-                  Math.sin(ang+i*0.2)*5*spd,
-                  { radius: 18, variant: 'fire' }
-              );
-
-              // Radial shots (8)
-              for(let i=0; i<8; i++) { 
-                  const angle = (i/8) * Math.PI * 2; 
-                  this.spawnBossProjectile(
-                      bossId,
-                      b.x,
-                      b.y + 100,
-                      Math.cos(angle)*5*spd,
-                      Math.sin(angle)*5*spd,
-                      { radius: 16, variant: 'ember' }
-                  ); 
-              }
-
-              // Side spread (4)
-              for(let i=-1; i<=2; i++) this.spawnBossProjectile(
-                  bossId,
-                  b.x + i*80,
-                  b.y + 100,
-                  i * 0.3 * spd,
-                  4.5*spd,
-                  { radius: 14, variant: 'ember' }
-              );
-          } else if (bossId === 'agirat') {
-              const ang = Math.atan2(this.player.y - (b.y+100), this.player.x - b.x);
-              for(let i=-1; i<=1; i++) this.spawnBossProjectile(
-                  bossId,
-                  b.x,
-                  b.y+100,
-                  Math.cos(ang+i*0.2)*5*spd,
-                  Math.sin(ang+i*0.2)*5*spd,
-                  { radius: 15, variant: 'hex' }
-              );
-          } else if (bossId === 'leviathan') {
-              for(let i=0; i<10; i++) { 
-                  const ang = (this.gameFrame*0.1) + (i/10)*Math.PI*2; 
-                  this.spawnBossProjectile(
-                      bossId,
-                      b.x,
-                      b.y+100,
-                      Math.cos(ang)*4.5*spd,
-                      Math.sin(ang)*4.5*spd,
-                      { radius: 17, variant: 'tide', spin: Math.random() * 0.3 }
-                  ); 
-              }
-          } else { // ziz
-              for(let i=0; i<8; i++) { 
-                  const ang = (this.gameFrame*0.1) + (i/8)*Math.PI*2; 
-                  this.spawnBossProjectile(
-                      bossId,
-                      b.x,
-                      b.y+100,
-                      Math.cos(ang)*4*spd,
-                      Math.sin(ang)*4*spd,
-                      { radius: 16, variant: 'feather', spin: Math.random() * Math.PI * 2 }
-                  ); 
+          } else { // the_master
+              // Shoots dark purple energy orbs (black holes)
+              // At hardest phase, mixes all previous boss projectiles
+              const isHardPhase = (b.hp / b.maxHp) < 0.3;
+              
+              if (isHardPhase) {
+                  // Mix of all previous attacks (reduced counts)
+                  for(let i=0; i<5; i++) {
+                      const angle = (i/5) * Math.PI * 2;
+                      this.spawnBossProjectile(
+                          bossId,
+                          b.x,
+                          b.y + 100,
+                          Math.cos(angle) * 4.5 * spd,
+                          Math.sin(angle) * 4.5 * spd,
+                          { radius: 20, variant: 'blackhole' }
+                      );
+                  }
+                  // Additional mixed projectiles
+                  const ang = Math.atan2(this.player.y - (b.y+100), this.player.x - b.x);
+                  for(let i=-1; i<=1; i++) {
+                      this.spawnBossProjectile(
+                          bossId,
+                          b.x,
+                          b.y + 100,
+                          Math.cos(ang + i * 0.25) * 5.5 * spd,
+                          Math.sin(ang + i * 0.25) * 5.5 * spd,
+                          { radius: 18, variant: 'mixed' }
+                      );
+                  }
+              } else {
+                  // Normal dark purple energy orbs (reduced from 8 to 6)
+                  for(let i=0; i<6; i++) {
+                      const ang = (this.gameFrame*0.08) + (i/6)*Math.PI*2;
+                      this.spawnBossProjectile(
+                          bossId,
+                          b.x,
+                          b.y + 100,
+                          Math.cos(ang) * 4.2 * spd,
+                          Math.sin(ang) * 4.2 * spd,
+                          { radius: 19, variant: 'blackhole' }
+                      );
+                  }
               }
           }
           Sound.play('shoot');
@@ -4069,14 +4290,80 @@ export class GameEngine {
         let p = this.bossProjectiles[i];
         if (!p) continue;
         p.tick = (p.tick || 0) + dt;
-        if (p.spin !== undefined) p.spin += (p.owner === 'koy' ? 0.025 : 0.012) * dt;
-        if (p.owner === 'tannina') p.x += Math.sin((p.tick || 0) * 0.09) * 0.7;
-        if (p.owner === 'leviathan') p.x += Math.sin((p.tick || 0) * 0.07) * 0.8;
-        if (p.owner === 'ziz') p.x += Math.cos((p.tick || 0) * 0.05) * 0.45;
-        p.y += p.vy * dt;
+        
+        // Spinning projectiles
+        if (p.spin !== undefined) {
+            if (p.owner === 'alpha_bot' || p.owner === 'twister') {
+                p.spin += 0.15 * dt; // Fast spinning for dice and bolts
+            } else {
+                p.spin += 0.012 * dt; // Normal spinning
+            }
+        }
+        
+        // Special movement patterns
+        if (p.owner === 'alpha_bot') {
+            // Dice spin and wobble slightly
+            p.x += Math.sin((p.tick || 0) * 0.1) * 0.5;
+        } else if (p.owner === 'the_bug') {
+            // Zigzag broken pattern (optimized)
+            p.x += Math.sin((p.tick || 0) * 0.2) * 2.0 * dt; // הפחתה מ-0.25 ל-0.2 ומ-2.5 ל-2.0
+        } else if (p.owner === 'sound_wave') {
+            // Expanding rings - radius increases (slower for performance)
+            p.radius = (p.radius || 20) + dt * 0.5; // הפחתה מ-0.8 ל-0.5
+            // Wave motion (reduced)
+            p.x += Math.sin((p.tick || 0) * 0.12) * 0.4; // הפחתה מ-0.6 ל-0.4
+        } else if (p.owner === 'twister') {
+            // Bolts fly in spiral pattern
+            const spiral = (p.tick || 0) * 0.2;
+            p.x += Math.cos(spiral) * 1.2 * dt;
+            p.y += Math.sin(spiral) * 0.3 * dt;
+        } else if (p.owner === 'the_faker') {
+            // Question marks wobble
+            p.x += Math.sin((p.tick || 0) * 0.15) * 0.8;
+        } else if (p.owner === 'blocker') {
+            // STOP mines fly towards player (homing effect)
+            const dist = Math.hypot(this.player.x - p.x, this.player.y - p.y);
+            if (dist > 0 && dist < 400) {
+                const pull = 0.8 * dt;
+                const targetVx = ((this.player.x - p.x) / dist) * 4.5;
+                const targetVy = ((this.player.y - p.y) / dist) * 4.5;
+                p.vx = (p.vx || 0) + (targetVx - (p.vx || 0)) * pull;
+                p.vy = (p.vy || 0) + (targetVy - (p.vy || 0)) * pull;
+            }
+        } else if (p.owner === 'robo_rule') {
+            // Ruler lines stay straight
+            // No special movement
+        } else if (p.owner === 'dr_brain') {
+            // Bubbles float up with slight wobble
+            p.x += Math.sin((p.tick || 0) * 0.1) * 0.4;
+        } else if (p.owner === 'king_word') {
+            // Coins spin, pens drop ink
+            p.x += Math.sin((p.tick || 0) * 0.08) * 0.3;
+        } else if (p.owner === 'the_master') {
+            // Black holes pull slightly
+            const dist = Math.hypot(p.x - this.player.x, p.y - this.player.y);
+            if (dist < 200 && dist > 0) {
+                const pull = 0.3 * dt;
+                p.vx += ((this.player.x - p.x) / dist) * pull;
+                p.vy += ((this.player.y - p.y) / dist) * pull;
+            }
+        }
+        
+        // Standard movement
+        p.y += (p.vy || 0) * dt;
         if (p.vx) p.x += p.vx * dt;
+        
+        // Collision check (optimized - using squared distance to avoid sqrt)
         const hitRadius = p.radius ?? 28;
-        if(Math.hypot(p.x - this.player.x, p.y - this.player.y) < hitRadius) { this.handleMiss(); this.bossProjectiles.splice(i, 1); }
+        const dx = p.x - this.player.x;
+        const dy = p.y - this.player.y;
+        const distSq = dx * dx + dy * dy;
+        const hitRadiusSq = hitRadius * hitRadius;
+        if(distSq < hitRadiusSq) { 
+            this.handleMiss(); 
+            this.bossProjectiles.splice(i, 1); 
+            continue; // Skip to next projectile
+        }
       }
   }
 
@@ -4092,7 +4379,7 @@ export class GameEngine {
       // High-quality boss VFX layer (dynamic aura + particles)
       this.drawBossVfx(bossId, loop);
 
-      // Subtle “camera light” from above for depth (masked by boss body because we only draw under it)
+      // Subtle "camera light" from above for depth (masked by boss body because we only draw under it)
       this.ctx.save();
       this.ctx.globalCompositeOperation = 'lighter';
       this.ctx.globalAlpha = 0.12;
@@ -4107,15 +4394,8 @@ export class GameEngine {
       this.ctx.restore();
 
       // Prefer user-provided boss image (public/bosses/...) with safe fallback to procedural bosses
-      if (!this.drawBossFromTexture(bossId)) {
-          if (bossId === 'tannina') this.drawTannina();
-          else if (bossId === 'koy') this.drawKoy();
-          else if (bossId === 'shed') this.drawShed();
-          else if (bossId === 'ashmedai') this.drawAshmedai();
-          else if (bossId === 'agirat') this.drawAgirat();
-          else if (bossId === 'leviathan') this.drawLeviathan();
-          else this.drawZiz();
-      }
+      // All bosses now use images - no procedural fallback needed
+      this.drawBossFromTexture(bossId);
       this.ctx.restore();
   }
 
@@ -5897,7 +6177,7 @@ export class GameEngine {
   startBossFight() {
       this.bossDamageTaken = false;
       const bossId: BossId = this.bossCycleMode
-          ? (BOSS_SEQUENCE[this.bossSequenceIndex] || 'tannina')
+          ? (BOSS_SEQUENCE[this.bossSequenceIndex] || 'alpha_bot')
           : this.getBossIdForLevel(this.level);
 
       const baseHp = 250 + (this.level * 15);
@@ -5932,8 +6212,8 @@ export class GameEngine {
       if (!this.boss) return;
       const defeatedId: BossId = (this.boss.id as BossId) || this.getBossIdForLevel(this.level);
 
-      // After first Ziz defeat, start looping bosses from the beginning with stronger stats
-      if (!this.bossCycleMode && defeatedId === 'ziz') {
+      // After first The Master defeat, start looping bosses from the beginning with stronger stats
+      if (!this.bossCycleMode && defeatedId === 'the_master') {
           this.bossCycleMode = true;
           this.bossLoop = 1;
           this.bossSequenceIndex = 0; // restart from first boss

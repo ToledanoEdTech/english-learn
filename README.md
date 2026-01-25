@@ -24,13 +24,16 @@ View your app in AI Studio: https://ai.studio/apps/drive/17H39eHJexVtBM9nkrn2B49
 כדי לשנות את המראה של הבוסים, מעלים תמונות לתיקייה `public/bosses/`.
 
 - **מומלץ (שמות קבצים):**
-  - `tannina.png`
-  - `koy.png`
-  - `shed.png`
-  - `ashmedai.png`
-  - `agirat.png`
-  - `leviathan.png`
-  - `ziz.png`
+  - `alpha_bot.png`
+  - `the_bug.png`
+  - `sound_wave.png`
+  - `twister.png`
+  - `the_faker.png`
+  - `blocker.png`
+  - `robo_rule.png`
+  - `dr_brain.png`
+  - `king_word.png`
+  - `the_master.png`
 
 - **דרישות:**
   - PNG/WebP עם רקע שקוף (alpha). אם אין שקיפות, המשחק יתעלם מהקובץ כדי לא לצייר “ריבוע” סביב הבוס, ויחזור לציור המובנה.

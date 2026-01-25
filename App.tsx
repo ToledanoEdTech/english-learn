@@ -202,12 +202,16 @@ function App() {
     
     // תמונות בוסים
     const bossImages = [
-      '/bosses/agirat.png',
-      '/bosses/ashmedai.png',
-      '/bosses/koy.png',
-      '/bosses/leviathan.png',
-      '/bosses/shed.png',
-      '/bosses/tannina.png'
+      '/bosses/alpha_bot.png',
+      '/bosses/the_bug.png',
+      '/bosses/sound_wave.png',
+      '/bosses/twister.png',
+      '/bosses/the_faker.png',
+      '/bosses/blocker.png',
+      '/bosses/robo_rule.png',
+      '/bosses/dr_brain.png',
+      '/bosses/king_word.png',
+      '/bosses/the_master.png'
     ];
     assets.push(...bossImages);
     
@@ -268,44 +272,68 @@ function App() {
       Sound.init();
       fetchData();
       
-      // בדיקת מצב השתקה מ-localStorage
+      // בדיקת מצב השתקה מ-localStorage - ברירת מחדל: סאונד פעיל
       const savedMuteState = localStorage.getItem('muted');
-      if (savedMuteState === 'true' && !Sound.isMuted) {
-        Sound.toggleMute();
+      if (savedMuteState === 'true') {
+        // אם נשמר במצב מושתק, נשתק
+        Sound.isMuted = true;
         setIsMuted(true);
       } else {
-        setIsMuted(Sound.isMuted);
+        // ברירת מחדל: סאונד פעיל - מוודאים שזה המצב
+        Sound.isMuted = false;
+        setIsMuted(false);
+        // מוחקים את הערך מ-localStorage אם הוא לא 'true' כדי להבטיח ברירת מחדל
+        if (savedMuteState !== null) {
+          localStorage.removeItem('muted');
+        }
       }
       
-      // התחלת מוזיקת תפריט בטעינה ראשונית
-      if (gameState === 'MENU') {
-        Sound.playMenuMusic();
+      // התחלת מוזיקת תפריט בטעינה ראשונית - ברירת מחדל: מוזיקה פעילה
+      // ננסה להתחיל את המוזיקה מיד, ואם זה נחסם, unlockAudio יטפל בזה
+      if (!Sound.isMuted && gameState === 'MENU') {
+        setTimeout(() => {
+          Sound.playMenuMusic();
+        }, 200);
       }
     });
 
     // הוספת האזנה לכל אינטראקציה כדי לשחרר את חסימת האודיו של הדפדפן
+    let hasUnlocked = false;
     const unlockAudio = () => {
+      if (hasUnlocked) return;
+      
       // ניסיון לחדש את הניגון אם הוא נחסם
       Sound.resume();
       
-      // הסרת המאזינים רק אם הצלחנו לנגן
-      if ((Sound.menuTrack && !Sound.menuTrack.paused) || (Sound.gameTrack && !Sound.gameTrack.paused) || (Sound.ctx && Sound.ctx.state === 'running')) {
-        window.removeEventListener('click', unlockAudio);
-        window.removeEventListener('touchstart', unlockAudio);
-        window.removeEventListener('keydown', unlockAudio);
+      // אם אנחנו בתפריט ולא מושתקים, נסה לנגן מוזיקת תפריט
+      if (!Sound.isMuted) {
+        if (gameState === 'MENU') {
+          Sound.playMenuMusic();
+        } else if (gameState === 'PLAYING') {
+          Sound.playGameMusic();
+        }
+        hasUnlocked = true;
       }
     };
     
-    window.addEventListener('click', unlockAudio);
-    window.addEventListener('touchstart', unlockAudio);
-    window.addEventListener('keydown', unlockAudio);
+    // הוספת מאזינים - נסה להתחיל מוזיקה בכל אינטראקציה ראשונה
+    window.addEventListener('click', unlockAudio, { once: true });
+    window.addEventListener('touchstart', unlockAudio, { once: true });
+    window.addEventListener('keydown', unlockAudio, { once: true });
+    
+    // גם נסה להתחיל מיד אם אפשר (למקרה שהדפדפן מאפשר autoplay)
+    setTimeout(() => {
+      if (!Sound.isMuted && gameState === 'MENU') {
+        Sound.playMenuMusic();
+      }
+    }, 300);
 
     return () => {
       window.removeEventListener('click', unlockAudio);
       window.removeEventListener('touchstart', unlockAudio);
       window.removeEventListener('keydown', unlockAudio);
     };
-  }, [loadAllAssets, fetchData]);
+  }, [loadAllAssets, fetchData, gameState]);
 
   // Handle URL Parameter after data is fetched
   useEffect(() => {
@@ -324,6 +352,13 @@ function App() {
       }
     }
   }, [hasFetched, dynamicWords.length]); // Re-run when fetch is done or dynamic words count changes
+
+  // Ensure music plays when returning to MENU (if not muted)
+  useEffect(() => {
+    if (gameState === 'MENU' && !isMuted && !isLoadingAssets) {
+      Sound.playMenuMusic();
+    }
+  }, [gameState, isMuted, isLoadingAssets]);
 
   const handleAddNewWord = async () => {
     if (!newWordAramaic || !newWordHebrew) return alert('נא למלא את כל השדות');
@@ -844,6 +879,29 @@ const equipSkin = (id: string) => {
 
       <canvas ref={canvasRef} className="block w-full h-full" />
 
+      {/* Mute Button - Fixed at bottom corner - Always visible (except loading screen) */}
+      {!isLoadingAssets && (
+        <button 
+            onClick={(e) => { 
+                e.preventDefault();
+                e.stopPropagation();
+                const muted = Sound.toggleMute(); 
+                setIsMuted(muted);
+                localStorage.setItem('muted', muted.toString());
+                Sound.play('ui_click');
+            }} 
+            className="fixed bottom-4 left-4 md:bottom-6 md:left-6 z-[500] rk-btn rk-btn-muted p-2 md:p-3 text-lg md:text-xl flex items-center justify-center flex-shrink-0 pointer-events-auto min-w-[3rem] md:min-w-[3.5rem] h-[3rem] md:h-[3.5rem] rounded-full shadow-2xl"
+            style={{ 
+              position: 'fixed',
+              zIndex: 500
+            }}
+            aria-label={isMuted ? 'השתק' : 'הפעל קול'}
+            title={isMuted ? 'השתק' : 'הפעל קול'}
+        >
+            {isMuted ? '🔇' : '🔊'}
+        </button>
+      )}
+
       {/* Animated menu/backdrop (CSS) */}
       {gameState !== 'PLAYING' && gameState !== 'INTRO' && (
         <Backdrop mode={gameState === 'MENU' ? 'menu' : 'default'} showShips={gameState === 'MENU'} />
@@ -1028,25 +1086,12 @@ const equipSkin = (id: string) => {
 
       {gameState === 'MENU' && !isLoadingAssets && (
           <div className="absolute inset-0 flex items-center justify-center h-full">
-              <div className="relative z-20 flex flex-col items-center p-4 md:p-8 w-[min(92vw,40rem)] text-center overflow-y-auto max-h-[92vh] scrollbar-hide rk-glass-strong rk-glow rounded-[2rem] md:rounded-[2.5rem]">
-                  <div className="flex justify-end w-full mb-2">
-                      <button 
-                          onClick={() => { 
-                              const muted = Sound.toggleMute(); 
-                              setIsMuted(muted);
-                              localStorage.setItem('muted', muted.toString());
-                              Sound.play('ui_click');
-                          }} 
-                          className="rk-btn rk-btn-muted px-3 py-2 md:px-4 md:py-3 text-xl md:text-2xl flex items-center justify-center"
-                          aria-label={isMuted ? 'השתק' : 'הפעל קול'}
-                          title={isMuted ? 'השתק' : 'הפעל קול'}
-                      >
-                          {isMuted ? '🔇' : '🔊'}
-                      </button>
+              <div className="relative z-20 flex flex-col items-center p-4 md:p-8 w-[min(92vw,40rem)] text-center overflow-y-auto overflow-x-hidden max-h-[92vh] scrollbar-hide rk-glass-strong rk-glow rounded-[2rem] md:rounded-[2.5rem]">
+                  <div className="relative w-full flex items-center justify-center mb-1 md:mb-4">
+                      <h1 className="font-aramaic text-5xl md:text-9xl rk-neon-title animate-bounce-slow tracking-tight whitespace-nowrap">
+                          Word Wars
+                      </h1>
                   </div>
-                  <h1 className="font-aramaic text-5xl md:text-9xl rk-neon-title mb-1 md:mb-4 animate-bounce-slow tracking-tight whitespace-nowrap">
-                      Word Wars
-                  </h1>
                   <p className="rk-neon-subtitle mb-4 md:mb-8 text-[11px] md:text-2xl font-light tracking-[0.28em] border-b border-blue-500/20 pb-2 uppercase">
                     לימוד מילים באנגלית - גרסת הקרב
                   </p>
@@ -1126,8 +1171,10 @@ const equipSkin = (id: string) => {
                   </div>
                   
                   {/* Credit Section */}
-                  <div className="mt-4 flex flex-col items-center justify-center opacity-80 hover:opacity-100 transition-opacity pb-8">
-                      <span className="text-amber-400/80 text-[10px] md:text-xs font-bold tracking-widest mb-1">נוצר ע"י יוסף טולידנו</span>
+                  <div className="mt-4 flex flex-col items-center justify-center opacity-80 hover:opacity-100 transition-opacity pb-8 w-full">
+                      <div className="flex items-center justify-center w-full">
+                          <span className="text-amber-400/80 text-[10px] md:text-xs font-bold tracking-widest">נוצר ע"י יוסף טולידנו</span>
+                      </div>
                       <img
                           src="/logo.png"
                           alt="Game Logo"

@@ -13,17 +13,20 @@
 - בתוך: public/bosses/
 
 איך לקרוא לקבצים? (מומלץ – הכי פשוט)
-- tannina.png
-- koy.png
-- shed.png
-- ashmedai.png
-- agirat.png
-- leviathan.png
-- ziz.png
+- alpha_bot.png
+- the_bug.png
+- sound_wave.png
+- twister.png
+- the_faker.png
+- blocker.png
+- robo_rule.png
+- dr_brain.png
+- king_word.png
+- the_master.png
 
 אפשר גם (Fallback – אם אתה/את מעדיף/ה שמות אחרים)
-- boss_<id>.png   (לדוגמה: boss_tannina.png)
-- skin_<id>.png   (לדוגמה: skin_tannina.png)
+- boss_<id>.png   (לדוגמה: boss_alpha_bot.png)
+- skin_<id>.png   (לדוגמה: skin_alpha_bot.png)
 - אפשר להשתמש ב-.webp במקום .png
 
 טיפ איכות:
