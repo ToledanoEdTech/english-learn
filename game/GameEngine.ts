@@ -1983,6 +1983,52 @@ export class GameEngine {
           
           if (p.type === 'missile') this.applyHoming(p, dt);
           
+          // Check collision with boss projectiles (specifically blocker's STOP mines)
+          if (p.active && !p.hasHit && this.bossProjectiles && this.bossProjectiles.length > 0) {
+              for (let j = this.bossProjectiles.length - 1; j >= 0; j--) {
+                  const bp = this.bossProjectiles[j];
+                  if (!bp || bp.owner !== 'blocker') continue; // Only blocker's STOP mines are destructible
+                  
+                  let isHit = false;
+                  
+                  if (p.type === 'beam') {
+                      // Beam is a vertical line from player position downward
+                      const isMobile = this.width < 600;
+                      const activeBeamCount = this.projectilePool.filter(pr => pr.active && pr.type === 'beam').length;
+                      const beamWidthMultiplier = 1 + (activeBeamCount - 1) * 0.3;
+                      const beamWidth = isMobile ? (bp.radius ?? 24) * 2.5 * beamWidthMultiplier : (bp.radius ?? 24) * 2 * beamWidthMultiplier;
+                      
+                      // Check if STOP mine is within beam's X range and below player
+                      const xDist = Math.abs(p.x - bp.x);
+                      isHit = xDist < beamWidth && bp.y < p.y;
+                  } else {
+                      // Regular bullet - point collision
+                      const dx = p.x - bp.x;
+                      const dy = p.y - bp.y;
+                      const distSq = dx * dx + dy * dy;
+                      const hitRadius = bp.radius ?? 24;
+                      const bulletRadius = 6; // Approximate bullet radius
+                      const hitRadiusSq = (hitRadius + bulletRadius) * (hitRadius + bulletRadius);
+                      isHit = distSq < hitRadiusSq;
+                  }
+                  
+                  if (isHit) {
+                      // Player bullet hit boss projectile - destroy STOP mine with explosion effect
+                      this.spawnExplosion(bp.x, bp.y, '#fbbf24', 8); // Enhanced yellow explosion
+                      Sound.play('boss_hit'); // Sound effect for destruction
+                      this.bossProjectiles.splice(j, 1);
+                      
+                      // For beam, don't deactivate it or mark as hit - let it continue hitting other STOP mines
+                      if (p.type !== 'beam') {
+                          p.active = false;
+                          p.hasHit = true;
+                          break; // Exit loop since bullet is destroyed
+                      }
+                      // Beam continues - don't break, allow it to hit multiple STOP mines
+                  }
+              }
+          }
+          
           if (this.boss && p.active && !p.hasHit) {
               const isMobile = this.width < 600;
               const baseHitRadius = isMobile ? 100 : 140;
@@ -6186,9 +6232,14 @@ export class GameEngine {
       const hp = Math.round(baseHp * bossMult * loopMult);
 
       const baseAttackRate = Math.max(45, 180 - (this.level * 2));
-      const attackRate = this.bossCycleMode
+      let attackRate = this.bossCycleMode
           ? Math.max(35, Math.round(baseAttackRate / (bossMult * (1 + this.bossLoop * 0.18))))
           : baseAttackRate;
+      
+      // Slow down blocker's attack rate slightly (make it easier)
+      if (bossId === 'blocker') {
+          attackRate = Math.round(attackRate * 1.15); // 15% slower firing rate
+      }
 
       const speedMult = this.bossCycleMode ? (1 + this.bossLoop * 0.12) : 1;
 
